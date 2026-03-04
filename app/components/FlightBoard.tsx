@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { RefreshCw } from "lucide-react";
 import { useFlightData } from "../lib/useFlightData";
+import { getAirportLabel } from "../lib/airports";
 import type { Flight, AirportCode, Direction } from "../lib/types";
 
 const AIRPORTS: { code: AirportCode; label: string }[] = [
@@ -45,6 +46,21 @@ function formatCachedAt(iso: string): string {
   });
 }
 
+function IataCode({ code }: { code: string }) {
+  const label = getAirportLabel(code);
+  if (!label) return <span>{code || "—"}</span>;
+  return (
+    <span className="relative group cursor-default">
+      <span className="underline decoration-dotted decoration-[var(--muted)] underline-offset-2">
+        {code}
+      </span>
+      <span className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 px-2 py-1 text-xs text-white bg-neutral-800 border border-neutral-700 rounded shadow-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity z-50">
+        {label}
+      </span>
+    </span>
+  );
+}
+
 function StatusBadge({ status }: { status: string }) {
   const color = STATUS_COLORS[status] || "text-[var(--muted)]";
   return (
@@ -77,7 +93,7 @@ function FlightRow({
         {flight.flight_iata}
       </td>
       <td className="py-2 pr-3 text-sm">{flight.airline_iata}</td>
-      <td className="py-2 pr-3 text-sm font-mono">{route || "—"}</td>
+      <td className="py-2 pr-3 text-sm font-mono"><IataCode code={route} /></td>
       <td className="py-2 pr-3 text-sm font-mono">{time}</td>
       <td className="py-2 pr-3 text-sm">{terminal || "—"}</td>
       <td className="py-2 pr-3 text-sm">{gate || "—"}</td>
@@ -120,7 +136,7 @@ function FlightCard({
       </div>
       <div className="flex items-center justify-between text-xs text-[var(--muted)]">
         <span>
-          {flight.airline_iata} → {route || "—"}
+          {flight.airline_iata} → <IataCode code={route} />
         </span>
         <span className="font-mono">{time}</span>
       </div>
@@ -130,6 +146,54 @@ function FlightCard({
         {flight.delayed ? (
           <span className="text-yellow-400">+{flight.delayed}m delay</span>
         ) : null}
+      </div>
+    </div>
+  );
+}
+
+function FlightSummary({ flights, airport, direction }: { flights: Flight[]; airport: AirportCode; direction: Direction }) {
+  const active = flights.filter((f) => f.status === "active").length;
+  const landed = flights.filter((f) => f.status === "landed").length;
+  const scheduled = flights.filter((f) => f.status === "scheduled").length;
+  const delayed = flights.filter((f) => f.status === "delayed").length;
+  const cancelled = flights.filter((f) => f.status === "cancelled").length;
+  const allCancelled = cancelled === flights.length;
+  const mostlyCancelled = cancelled > flights.length * 0.5;
+
+  let bannerColor: string;
+  let bannerIcon: string;
+  let bannerText: string;
+
+  if (allCancelled) {
+    bannerColor = "bg-red-500/10 border-red-500/20";
+    bannerIcon = "🔴";
+    bannerText = `${airport} ${direction} appear fully suspended — all ${cancelled} flights cancelled`;
+  } else if (mostlyCancelled) {
+    bannerColor = "bg-red-500/10 border-red-500/20";
+    bannerIcon = "🟠";
+    bannerText = `${airport} mostly disrupted — ${cancelled} of ${flights.length} flights cancelled`;
+  } else if (cancelled > 0 || delayed > 0) {
+    bannerColor = "bg-yellow-500/10 border-yellow-500/20";
+    bannerIcon = "🟡";
+    bannerText = `${airport} operating with disruptions`;
+  } else {
+    bannerColor = "bg-green-500/10 border-green-500/20";
+    bannerIcon = "🟢";
+    bannerText = `${airport} ${direction} operating normally`;
+  }
+
+  return (
+    <div className={`rounded-lg border p-3 ${bannerColor}`}>
+      <p className="text-sm font-semibold">
+        {bannerIcon} {bannerText}
+      </p>
+      <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1.5 text-xs">
+        {scheduled > 0 && <span className="text-green-400">{scheduled} scheduled</span>}
+        {active > 0 && <span className="text-green-400">{active} in air</span>}
+        {landed > 0 && <span className="text-green-400">{landed} landed</span>}
+        {delayed > 0 && <span className="text-yellow-400">{delayed} delayed</span>}
+        {cancelled > 0 && <span className="text-red-400">{cancelled} cancelled</span>}
+        <span className="text-[var(--muted)]">{flights.length} total</span>
       </div>
     </div>
   );
@@ -264,6 +328,8 @@ export default function FlightBoard() {
 
       {!loading && flights.length > 0 && (
         <>
+          <FlightSummary flights={flights} airport={airport} direction={direction} />
+
           {/* Desktop Table */}
           <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-left">

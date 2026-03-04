@@ -1,0 +1,90 @@
+/** IATA code → full airport info for tooltip display */
+export const AIRPORTS: Record<string, { name: string; city: string; country: string }> = {
+  // UAE
+  DXB: { name: "Dubai International", city: "Dubai", country: "UAE" },
+  DWC: { name: "Al Maktoum International", city: "Dubai", country: "UAE" },
+  AUH: { name: "Zayed International", city: "Abu Dhabi", country: "UAE" },
+  SHJ: { name: "Sharjah International", city: "Sharjah", country: "UAE" },
+  RKT: { name: "Ras Al Khaimah International", city: "Ras Al Khaimah", country: "UAE" },
+  // Oman
+  MCT: { name: "Muscat International", city: "Muscat", country: "Oman" },
+  SLL: { name: "Salalah Airport", city: "Salalah", country: "Oman" },
+  // Gulf
+  DOH: { name: "Hamad International", city: "Doha", country: "Qatar" },
+  BAH: { name: "Bahrain International", city: "Manama", country: "Bahrain" },
+  KWI: { name: "Kuwait International", city: "Kuwait City", country: "Kuwait" },
+  RUH: { name: "King Khalid International", city: "Riyadh", country: "Saudi Arabia" },
+  JED: { name: "King Abdulaziz International", city: "Jeddah", country: "Saudi Arabia" },
+  DMM: { name: "King Fahd International", city: "Dammam", country: "Saudi Arabia" },
+  MED: { name: "Prince Mohammad International", city: "Medina", country: "Saudi Arabia" },
+  // South Asia
+  BOM: { name: "Chhatrapati Shivaji Maharaj", city: "Mumbai", country: "India" },
+  DEL: { name: "Indira Gandhi International", city: "Delhi", country: "India" },
+  BLR: { name: "Kempegowda International", city: "Bangalore", country: "India" },
+  MAA: { name: "Chennai International", city: "Chennai", country: "India" },
+  HYD: { name: "Rajiv Gandhi International", city: "Hyderabad", country: "India" },
+  COK: { name: "Cochin International", city: "Kochi", country: "India" },
+  CCJ: { name: "Calicut International", city: "Kozhikode", country: "India" },
+  TRV: { name: "Trivandrum International", city: "Thiruvananthapuram", country: "India" },
+  LKO: { name: "Chaudhary Charan Singh", city: "Lucknow", country: "India" },
+  AMD: { name: "Sardar Vallabhbhai Patel", city: "Ahmedabad", country: "India" },
+  KHI: { name: "Jinnah International", city: "Karachi", country: "Pakistan" },
+  LHE: { name: "Allama Iqbal International", city: "Lahore", country: "Pakistan" },
+  ISB: { name: "Islamabad International", city: "Islamabad", country: "Pakistan" },
+  DAC: { name: "Hazrat Shahjalal International", city: "Dhaka", country: "Bangladesh" },
+  CMB: { name: "Bandaranaike International", city: "Colombo", country: "Sri Lanka" },
+  KTM: { name: "Tribhuvan International", city: "Kathmandu", country: "Nepal" },
+  // Middle East & Africa
+  CAI: { name: "Cairo International", city: "Cairo", country: "Egypt" },
+  AMM: { name: "Queen Alia International", city: "Amman", country: "Jordan" },
+  BEY: { name: "Rafic Hariri International", city: "Beirut", country: "Lebanon" },
+  IST: { name: "Istanbul Airport", city: "Istanbul", country: "Turkey" },
+  SAW: { name: "Sabiha Gökçen", city: "Istanbul", country: "Turkey" },
+  TLV: { name: "Ben Gurion", city: "Tel Aviv", country: "Israel" },
+  ADD: { name: "Bole International", city: "Addis Ababa", country: "Ethiopia" },
+  NBO: { name: "Jomo Kenyatta International", city: "Nairobi", country: "Kenya" },
+  JNB: { name: "O.R. Tambo International", city: "Johannesburg", country: "South Africa" },
+  // Europe
+  LHR: { name: "Heathrow", city: "London", country: "UK" },
+  LGW: { name: "Gatwick", city: "London", country: "UK" },
+  MAN: { name: "Manchester Airport", city: "Manchester", country: "UK" },
+  CDG: { name: "Charles de Gaulle", city: "Paris", country: "France" },
+  FRA: { name: "Frankfurt Airport", city: "Frankfurt", country: "Germany" },
+  MUC: { name: "Munich Airport", city: "Munich", country: "Germany" },
+  AMS: { name: "Schiphol", city: "Amsterdam", country: "Netherlands" },
+  FCO: { name: "Fiumicino", city: "Rome", country: "Italy" },
+  MXP: { name: "Malpensa", city: "Milan", country: "Italy" },
+  MAD: { name: "Adolfo Suárez Madrid–Barajas", city: "Madrid", country: "Spain" },
+  BCN: { name: "Josep Tarradellas Barcelona–El Prat", city: "Barcelona", country: "Spain" },
+  ZRH: { name: "Zürich Airport", city: "Zürich", country: "Switzerland" },
+  VIE: { name: "Vienna International", city: "Vienna", country: "Austria" },
+  ATH: { name: "Eleftherios Venizelos", city: "Athens", country: "Greece" },
+  // Asia Pacific
+  SIN: { name: "Changi Airport", city: "Singapore", country: "Singapore" },
+  BKK: { name: "Suvarnabhumi", city: "Bangkok", country: "Thailand" },
+  KUL: { name: "Kuala Lumpur International", city: "Kuala Lumpur", country: "Malaysia" },
+  HKG: { name: "Hong Kong International", city: "Hong Kong", country: "China" },
+  PVG: { name: "Pudong International", city: "Shanghai", country: "China" },
+  PEK: { name: "Beijing Capital", city: "Beijing", country: "China" },
+  NRT: { name: "Narita International", city: "Tokyo", country: "Japan" },
+  ICN: { name: "Incheon International", city: "Seoul", country: "South Korea" },
+  MNL: { name: "Ninoy Aquino International", city: "Manila", country: "Philippines" },
+  SYD: { name: "Kingsford Smith", city: "Sydney", country: "Australia" },
+  MEL: { name: "Melbourne Airport", city: "Melbourne", country: "Australia" },
+  // Americas
+  JFK: { name: "John F. Kennedy International", city: "New York", country: "USA" },
+  EWR: { name: "Newark Liberty International", city: "Newark", country: "USA" },
+  LAX: { name: "Los Angeles International", city: "Los Angeles", country: "USA" },
+  ORD: { name: "O'Hare International", city: "Chicago", country: "USA" },
+  IAD: { name: "Dulles International", city: "Washington D.C.", country: "USA" },
+  SFO: { name: "San Francisco International", city: "San Francisco", country: "USA" },
+  IAH: { name: "George Bush Intercontinental", city: "Houston", country: "USA" },
+  YYZ: { name: "Toronto Pearson", city: "Toronto", country: "Canada" },
+  GRU: { name: "Guarulhos International", city: "São Paulo", country: "Brazil" },
+};
+
+export function getAirportLabel(iata: string): string | null {
+  const info = AIRPORTS[iata];
+  if (!info) return null;
+  return `${info.name}, ${info.city}, ${info.country}`;
+}
