@@ -1,1186 +1,957 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { SECTIONS_META, EMERGENCY_CONTACTS } from "./data/sections";
 import FlightBoard from "./components/FlightBoard";
 
-// ─── Sidebar (desktop) ─────────────────────────────────
+type SectionMeta = (typeof SECTIONS_META)[number];
+
+// ── Severity badge config per section ───────────────────
+const SECTION_SEVERITY: Record<string, "red" | "yellow" | "green" | null> = {
+  overview: "red",
+  attacks: "red",
+  "iran-position": "red",
+  "uae-response": "yellow",
+  casualties: "red",
+  history: null,
+  flights: "red",
+  markets: "yellow",
+  emergency: "red",
+  shelter: "yellow",
+  supplies: "yellow",
+  exit: "yellow",
+  informed: "green",
+};
+
+// ── Theme ────────────────────────────────────────────────
+function useTheme() {
+  const [theme, setTheme] = useState<"light" | "dark">("light");
+
+  useEffect(() => {
+    const stored = localStorage.getItem("theme");
+    const isDark = stored === "dark";
+    setTheme(isDark ? "dark" : "light");
+    document.documentElement.classList.toggle("dark", isDark);
+  }, []);
+
+  const toggle = useCallback(() => {
+    setTheme((prev) => {
+      const next = prev === "light" ? "dark" : "light";
+      localStorage.setItem("theme", next);
+      document.documentElement.classList.toggle("dark", next === "dark");
+      return next;
+    });
+  }, []);
+
+  return { theme, toggle };
+}
+
+// ── ThemeToggle ──────────────────────────────────────────
+function ThemeToggle({ theme, onToggle }: { theme: "light" | "dark"; onToggle: () => void }) {
+  return (
+    <button
+      onClick={onToggle}
+      aria-label={`Switch to ${theme === "light" ? "dark" : "light"} mode`}
+      className="flex items-center justify-center w-8 h-8 rounded-md border border-[var(--card-border)] text-[var(--muted)] hover:text-[var(--foreground)] hover:bg-[var(--muted-bg)] transition-colors"
+    >
+      {theme === "light" ? (
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+        </svg>
+      ) : (
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="12" r="5" />
+          <line x1="12" y1="1" x2="12" y2="3" /><line x1="12" y1="21" x2="12" y2="23" />
+          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" /><line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+          <line x1="1" y1="12" x2="3" y2="12" /><line x1="21" y1="12" x2="23" y2="12" />
+          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" /><line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+        </svg>
+      )}
+    </button>
+  );
+}
+
+// ── Reading Progress Bar ─────────────────────────────────
+function ReadingProgress() {
+  const [width, setWidth] = useState(0);
+
+  useEffect(() => {
+    const update = () => {
+      const el = document.documentElement;
+      const scrollTop = el.scrollTop || document.body.scrollTop;
+      const scrollHeight = el.scrollHeight - el.clientHeight;
+      setWidth(scrollHeight > 0 ? (scrollTop / scrollHeight) * 100 : 0);
+    };
+    window.addEventListener("scroll", update, { passive: true });
+    return () => window.removeEventListener("scroll", update);
+  }, []);
+
+  return (
+    <div
+      id="reading-progress"
+      style={{ width: `${width}%` }}
+      aria-hidden="true"
+    />
+  );
+}
+
+// ── Severity Dot ─────────────────────────────────────────
+function SeverityDot({ severity }: { severity: "red" | "yellow" | "green" | null }) {
+  if (!severity) return <span className="w-1.5 h-1.5 flex-shrink-0" />;
+  const colors = { red: "bg-red-500", yellow: "bg-yellow-500", green: "bg-green-500" };
+  return <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${colors[severity]}`} />;
+}
+
+// ── Sidebar ──────────────────────────────────────────────
 function Sidebar({
   activeSection,
   onNavigate,
+  theme,
+  onToggleTheme,
 }: {
   activeSection: string;
   onNavigate: (id: string) => void;
+  theme: "light" | "dark";
+  onToggleTheme: () => void;
 }) {
-  const situationSections = SECTIONS_META.filter(
-    (s) => s.category === "situation"
-  );
-  const practicalSections = SECTIONS_META.filter(
-    (s) => s.category === "practical"
-  );
+  const situationSections = SECTIONS_META.filter((s) => s.category === "situation");
+  const practicalSections = SECTIONS_META.filter((s) => s.category === "practical");
 
   return (
-    <aside className="hidden lg:flex flex-col fixed left-0 top-0 h-screen w-56 bg-[var(--card)] border-r border-[var(--card-border)] py-6 px-3 z-40 hide-scrollbar overflow-y-auto">
-      <div className="mb-6 px-2">
-        <h2 className="text-sm font-bold text-red-500 uppercase tracking-wider">
-          🚨 Iran-UAE
-        </h2>
-        <p className="text-xs text-[var(--muted)] mt-1">Conflict Explainer</p>
+    <aside className="hidden lg:flex flex-col fixed left-0 top-0 h-screen w-56 border-r border-[var(--card-border)] z-40 overflow-y-auto hide-scrollbar bg-[var(--background)]">
+      {/* Brand */}
+      <div className="px-5 pt-6 pb-5 border-b border-[var(--card-border)]">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] animate-pulse" />
+            <span className="text-[10px] font-semibold text-[var(--accent)] uppercase tracking-widest">Live</span>
+          </div>
+          <ThemeToggle theme={theme} onToggle={onToggleTheme} />
+        </div>
+        <h1 className="text-[13px] font-semibold text-[var(--foreground)] leading-snug">Iran–UAE Conflict</h1>
+        <p className="text-[11px] text-[var(--muted)] mt-0.5">Mar 4, 2026 · 02:00 GMT+4</p>
       </div>
 
-      <nav className="flex flex-col gap-1">
-        <p className="text-[10px] font-semibold text-[var(--muted)] uppercase tracking-widest px-2 mb-1">
-          Situation
-        </p>
-        {situationSections.map((s) => (
-          <button
-            key={s.id}
-            onClick={() => onNavigate(s.id)}
-            className={`text-left px-3 py-2 rounded-lg text-sm transition-all ${
-              activeSection === s.id
-                ? "bg-red-500/10 text-red-400 font-medium"
-                : "text-[var(--muted)] hover:text-[var(--foreground)] hover:bg-[var(--muted-bg)]"
-            }`}
-          >
-            <span className="mr-2">{s.emoji}</span>
-            {s.shortTitle}
-          </button>
-        ))}
-
-        <p className="text-[10px] font-semibold text-[var(--muted)] uppercase tracking-widest px-2 mt-4 mb-1">
-          Practical
-        </p>
-        {practicalSections.map((s) => (
-          <button
-            key={s.id}
-            onClick={() => onNavigate(s.id)}
-            className={`text-left px-3 py-2 rounded-lg text-sm transition-all ${
-              activeSection === s.id
-                ? "bg-red-500/10 text-red-400 font-medium"
-                : "text-[var(--muted)] hover:text-[var(--foreground)] hover:bg-[var(--muted-bg)]"
-            }`}
-          >
-            <span className="mr-2">{s.emoji}</span>
-            {s.shortTitle}
-          </button>
-        ))}
+      {/* Nav */}
+      <nav className="flex flex-col px-3 py-4 gap-0.5 flex-1" aria-label="Main navigation">
+        <NavGroup label="Situation" sections={situationSections} activeSection={activeSection} onNavigate={onNavigate} />
+        <div className="mt-4">
+          <NavGroup label="Practical Guide" sections={practicalSections} activeSection={activeSection} onNavigate={onNavigate} />
+        </div>
       </nav>
 
-      <div className="mt-auto pt-4 px-2">
-        <p className="text-[10px] text-[var(--muted)]">
-          Last updated: Mar 4, 2026
-          <br />
-          02:00 GMT+4
-        </p>
+      {/* Emergency CTA */}
+      <div className="px-3 pb-5">
+        <button
+          onClick={() => onNavigate("emergency")}
+          className="emergency-pulse w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg bg-[var(--accent)]/10 border border-[var(--accent)]/25 text-[var(--accent)] text-xs font-semibold hover:bg-[var(--accent)]/15 transition-colors"
+        >
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.63 3.45 2 2 0 0 1 3.6 1.27h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 9A16 16 0 0 0 15 16.09l1.09-1.09a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" />
+          </svg>
+          Emergency Contacts
+        </button>
       </div>
     </aside>
   );
 }
 
-// ─── Mobile Bottom Nav ──────────────────────────────────
-function BottomNav({
+function NavGroup({
+  label,
+  sections,
+  activeSection,
   onNavigate,
-  onEmergency,
 }: {
+  label: string;
+  sections: SectionMeta[];
+  activeSection: string;
   onNavigate: (id: string) => void;
-  onEmergency: () => void;
 }) {
-  const quickLinks = [
-    { id: "overview", emoji: "📋", label: "Info" },
-    { id: "flights", emoji: "✈️", label: "Flights" },
-    { id: "emergency", emoji: "🚨", label: "SOS" },
-    { id: "shelter", emoji: "🏠", label: "Shelter" },
-    { id: "exit", emoji: "🚪", label: "Exit" },
-  ];
-
   return (
-    <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-[var(--card)]/95 backdrop-blur-lg border-t border-[var(--card-border)] z-50 safe-area-bottom">
-      <div className="flex justify-around items-center h-16 px-2">
-        {quickLinks.map((link) => (
+    <div>
+      <p className="text-[10px] font-semibold text-[var(--muted)] uppercase tracking-widest px-2 py-1.5 mt-1 mb-0.5">
+        {label}
+      </p>
+      {sections.map((s) => {
+        const isActive = activeSection === s.id;
+        const severity = SECTION_SEVERITY[s.id];
+        return (
           <button
-            key={link.id}
-            onClick={() =>
-              link.id === "emergency" ? onEmergency() : onNavigate(link.id)
-            }
-            className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg transition-colors ${
-              link.id === "emergency"
-                ? "text-red-400"
-                : "text-[var(--muted)] active:text-[var(--foreground)]"
+            key={s.id}
+            onClick={() => onNavigate(s.id)}
+            className={`w-full text-left px-2 py-[7px] rounded-md text-[13px] transition-all duration-100 flex items-center gap-2 ${
+              isActive
+                ? "bg-[var(--nav-active-bg)] text-[var(--foreground)] font-medium"
+                : "text-[var(--muted)] hover:text-[var(--foreground)] hover:bg-[var(--muted-bg)]"
             }`}
           >
-            <span className="text-lg">{link.emoji}</span>
-            <span className="text-[10px] font-medium">{link.label}</span>
+            <span className={`w-0.5 h-3.5 rounded-full flex-shrink-0 transition-colors ${isActive ? "bg-[var(--accent)]" : "bg-transparent"}`} />
+            <span className="flex-1">{s.shortTitle}</span>
+            <SeverityDot severity={severity} />
           </button>
-        ))}
-      </div>
-    </nav>
-  );
-}
-
-// ─── Emergency Modal ────────────────────────────────────
-function EmergencyModal({ onClose }: { onClose: () => void }) {
-  return (
-    <div
-      className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] flex items-end sm:items-center justify-center p-4"
-      onClick={onClose}
-    >
-      <div
-        className="bg-[var(--card)] border border-[var(--card-border)] rounded-2xl w-full max-w-lg max-h-[85vh] overflow-y-auto"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="sticky top-0 bg-red-600 rounded-t-2xl px-5 py-4 flex justify-between items-center">
-          <h2 className="text-lg font-bold text-white">🚨 Emergency Contacts</h2>
-          <button
-            onClick={onClose}
-            className="text-white/80 hover:text-white text-2xl leading-none"
-          >
-            ×
-          </button>
-        </div>
-
-        <div className="p-5">
-          <div className="mb-6">
-            <h3 className="text-sm font-bold text-red-400 uppercase tracking-wider mb-3">
-              UAE Emergency Numbers
-            </h3>
-            <div className="grid grid-cols-1 gap-2">
-              {EMERGENCY_CONTACTS.uae.map((c) => (
-                <a
-                  key={c.number}
-                  href={`tel:${c.number}`}
-                  className="flex justify-between items-center bg-[var(--muted-bg)] rounded-xl px-4 py-3 hover:bg-red-500/10 transition-colors"
-                >
-                  <span className="text-sm text-[var(--foreground)]">
-                    {c.label}
-                  </span>
-                  <span className="text-lg font-bold text-red-400 font-mono">
-                    {c.number}
-                  </span>
-                </a>
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <h3 className="text-sm font-bold text-blue-400 uppercase tracking-wider mb-3">
-              Embassies (Abu Dhabi)
-            </h3>
-            <div className="grid grid-cols-1 gap-2">
-              {EMERGENCY_CONTACTS.embassies.map((e) => (
-                <a
-                  key={e.phone}
-                  href={`tel:${e.phone}`}
-                  className="flex justify-between items-center bg-[var(--muted-bg)] rounded-xl px-4 py-3 hover:bg-blue-500/10 transition-colors"
-                >
-                  <span className="text-sm">{e.country}</span>
-                  <span className="text-xs font-mono text-[var(--muted)]">
-                    {e.phone}
-                  </span>
-                </a>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
+        );
+      })}
     </div>
   );
 }
 
-// ─── Floating Emergency Button ──────────────────────────
-function EmergencyFAB({ onClick }: { onClick: () => void }) {
+// ── Mobile Top Bar ───────────────────────────────────────
+function MobileTopBar({
+  activeSection,
+  onNavigate,
+  theme,
+  onToggleTheme,
+}: {
+  activeSection: string;
+  onNavigate: (id: string) => void;
+  theme: "light" | "dark";
+  onToggleTheme: () => void;
+}) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!scrollRef.current) return;
+    const activeEl = scrollRef.current.querySelector("[data-active='true']") as HTMLElement;
+    if (activeEl) {
+      activeEl.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+    }
+  }, [activeSection]);
+
   return (
-    <button
-      onClick={onClick}
-      className="fixed bottom-20 right-4 lg:bottom-6 lg:right-6 z-50 bg-red-600 hover:bg-red-700 text-white rounded-full w-14 h-14 flex items-center justify-center shadow-2xl emergency-pulse transition-transform hover:scale-110"
-      aria-label="Emergency contacts"
-    >
-      <span className="text-2xl">🚨</span>
-    </button>
+    <header className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-[var(--background)]/95 backdrop-blur-lg border-b border-[var(--card-border)]">
+      <div className="flex items-center justify-between px-4 h-11 border-b border-[var(--card-border)]/50">
+        <div className="flex items-center gap-2">
+          <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] animate-pulse" />
+          <span className="text-[13px] font-semibold text-[var(--foreground)]">Iran–UAE Conflict</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <ThemeToggle theme={theme} onToggle={onToggleTheme} />
+          <button
+            onClick={() => onNavigate("emergency")}
+            className="flex items-center gap-1.5 text-[var(--accent)] text-xs font-semibold px-2.5 py-1 rounded-full border border-[var(--accent)]/30 bg-[var(--accent)]/8"
+            aria-label="Emergency contacts"
+          >
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.63 3.45 2 2 0 0 1 3.6 1.27h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 9A16 16 0 0 0 15 16.09l1.09-1.09a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" />
+            </svg>
+            SOS
+          </button>
+        </div>
+      </div>
+      <div ref={scrollRef} className="flex gap-0 overflow-x-auto hide-scrollbar px-3 h-10 items-center">
+        {SECTIONS_META.map((s) => {
+          const isActive = activeSection === s.id;
+          const severity = SECTION_SEVERITY[s.id];
+          return (
+            <button
+              key={s.id}
+              data-active={isActive}
+              onClick={() => onNavigate(s.id)}
+              className={`flex-shrink-0 px-3 h-full text-[12px] font-medium border-b-2 transition-colors whitespace-nowrap flex items-center gap-1.5 ${
+                isActive
+                  ? "border-[var(--accent)] text-[var(--foreground)]"
+                  : "border-transparent text-[var(--muted)] hover:text-[var(--foreground)]"
+              }`}
+            >
+              {s.shortTitle}
+              {severity === "red" && (
+                <span className="w-1 h-1 rounded-full bg-red-500 flex-shrink-0" />
+              )}
+            </button>
+          );
+        })}
+      </div>
+    </header>
   );
 }
 
-// ─── Section Card ───────────────────────────────────────
-function SectionCard({
-  emoji,
-  title,
-  onClick,
-  highlight,
-}: {
-  emoji: string;
-  title: string;
-  onClick: () => void;
-  highlight?: boolean;
-}) {
+// ── Primitives ───────────────────────────────────────────
+function Card({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return (
-    <button
-      onClick={onClick}
-      className={`flex flex-col items-center justify-center gap-2 p-4 rounded-xl border transition-all hover:scale-[1.02] active:scale-[0.98] ${
-        highlight
-          ? "bg-red-500/10 border-red-500/30 hover:border-red-500/50"
-          : "bg-[var(--card)] border-[var(--card-border)] hover:border-[var(--muted)]"
-      }`}
-    >
-      <span className="text-2xl">{emoji}</span>
-      <span className="text-xs font-medium text-[var(--foreground)]">
-        {title}
-      </span>
-    </button>
-  );
-}
-
-// ─── Info Card Component ────────────────────────────────
-function InfoCard({
-  children,
-  className = "",
-}: {
-  children: React.ReactNode;
-  className?: string;
-}) {
-  return (
-    <div
-      className={`bg-[var(--card)] border border-[var(--card-border)] rounded-xl p-5 ${className}`}
-    >
+    <div className={`bg-[var(--card)] border border-[var(--card-border)] rounded-lg ${className}`}>
       {children}
     </div>
   );
 }
 
-function StatusBadge({
-  status,
-  label,
+function CollapsibleSection({
+  id,
+  title,
+  children,
+  nextSection,
+  onNavigate,
 }: {
-  status: "red" | "yellow" | "green";
-  label: string;
+  id: string;
+  title: string;
+  children: React.ReactNode;
+  nextSection?: { id: string; shortTitle: string };
+  onNavigate: (id: string) => void;
 }) {
-  const colors = {
-    red: "bg-red-500/20 text-red-400 border-red-500/30",
-    yellow: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
-    green: "bg-green-500/20 text-green-400 border-green-500/30",
+  const [collapsed, setCollapsed] = useState(false);
+
+  const copyLink = () => {
+    navigator.clipboard.writeText(`${window.location.origin}${window.location.pathname}#${id}`).catch(() => {});
   };
+
   return (
-    <span
-      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border ${colors[status]}`}
-    >
-      <span
-        className={`w-1.5 h-1.5 rounded-full ${
-          status === "red"
-            ? "bg-red-400"
-            : status === "yellow"
-            ? "bg-yellow-400"
-            : "bg-green-400"
-        }`}
-      />
+    <section id={id} className="space-y-3">
+      {/* Heading row */}
+      <div className="flex items-center gap-2 group">
+        <h2 className="text-[15px] font-semibold tracking-tight text-[var(--foreground)] flex-1">
+          {title}
+        </h2>
+        {/* Anchor copy link */}
+        <button
+          onClick={copyLink}
+          aria-label="Copy link to section"
+          className="opacity-0 group-hover:opacity-100 transition-opacity text-[var(--muted)] hover:text-[var(--foreground)] p-1 rounded"
+        >
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+          </svg>
+        </button>
+        {/* Collapse toggle */}
+        <button
+          onClick={() => setCollapsed((c) => !c)}
+          aria-label={collapsed ? "Expand section" : "Collapse section"}
+          className="text-[var(--muted)] hover:text-[var(--foreground)] p-1 rounded transition-colors"
+        >
+          <svg
+            width="13"
+            height="13"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className={`transition-transform duration-200 ${collapsed ? "-rotate-90" : "rotate-0"}`}
+          >
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
+        </button>
+      </div>
+
+      {/* Content */}
+      {!collapsed && (
+        <div className="space-y-3 animate-in fade-in duration-200">
+          {children}
+          {/* Next section strip */}
+          {nextSection && (
+            <button
+              onClick={() => onNavigate(nextSection.id)}
+              className="w-full flex items-center justify-between px-4 py-2.5 rounded-lg border border-[var(--card-border)] text-[var(--muted)] hover:text-[var(--foreground)] hover:border-[var(--muted)] hover:bg-[var(--muted-bg)] transition-colors text-xs"
+            >
+              <span>Next: {nextSection.shortTitle}</span>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="9 18 15 12 9 6" />
+              </svg>
+            </button>
+          )}
+        </div>
+      )}
+    </section>
+  );
+}
+
+function StatusPill({ status, label }: { status: "red" | "yellow" | "green"; label: string }) {
+  const styles = {
+    red: "bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20",
+    yellow: "bg-yellow-500/10 text-yellow-700 dark:text-yellow-400 border-yellow-500/20",
+    green: "bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/20",
+  };
+  const dotStyles = { red: "bg-red-500", yellow: "bg-yellow-500", green: "bg-green-500" };
+  return (
+    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium border ${styles[status]}`}>
+      <span className={`w-1.5 h-1.5 rounded-full ${dotStyles[status]}`} />
       {label}
     </span>
   );
 }
 
-// ─── Section Content Components ─────────────────────────
-
-function OverviewSection() {
+function StatBox({ value, label, color = "foreground" }: {
+  value: string; label: string; color?: "red" | "yellow" | "orange" | "blue" | "foreground";
+}) {
+  const valueColor = {
+    red: "text-red-600 dark:text-red-400",
+    yellow: "text-yellow-600 dark:text-yellow-400",
+    orange: "text-orange-600 dark:text-orange-400",
+    blue: "text-blue-600 dark:text-blue-400",
+    foreground: "text-[var(--foreground)]",
+  }[color];
   return (
-    <section id="overview" className="space-y-4">
-      <h2 className="text-2xl font-bold flex items-center gap-3">
-        📋 Overview
-      </h2>
-      <InfoCard>
-        <div className="space-y-4">
-          <div className="flex flex-wrap gap-2">
-            <StatusBadge status="red" label="Active Conflict" />
-            <StatusBadge status="red" label="Airspace Closed" />
-            <StatusBadge status="yellow" label="Markets Disrupted" />
-          </div>
-          <p className="text-[var(--muted)] leading-relaxed">
-            Iran launched missile and drone strikes against UAE targets starting
-            February 28, 2026. The UAE, backed by US CENTCOM, has responded with
-            defensive intercepts and retaliatory strikes. This is the most
-            significant military escalation in the Gulf since the 1980s Iran-Iraq
-            War.
-          </p>
-          <div className="grid grid-cols-2 gap-3 mt-4">
-            <div className="bg-[var(--muted-bg)] rounded-lg p-3">
-              <p className="text-xs text-[var(--muted)]">Conflict Started</p>
-              <p className="text-sm font-semibold">Feb 28, 2026</p>
-            </div>
-            <div className="bg-[var(--muted-bg)] rounded-lg p-3">
-              <p className="text-xs text-[var(--muted)]">Status</p>
-              <p className="text-sm font-semibold text-red-400">Active</p>
-            </div>
-            <div className="bg-[var(--muted-bg)] rounded-lg p-3">
-              <p className="text-xs text-[var(--muted)]">Ceasefire</p>
-              <p className="text-sm font-semibold text-yellow-400">
-                None declared
-              </p>
-            </div>
-            <div className="bg-[var(--muted-bg)] rounded-lg p-3">
-              <p className="text-xs text-[var(--muted)]">US Involvement</p>
-              <p className="text-sm font-semibold">Active (CENTCOM)</p>
-            </div>
-          </div>
-        </div>
-      </InfoCard>
-    </section>
+    <div className="bg-[var(--muted-bg)] rounded-lg p-3.5">
+      <p className={`text-xl font-bold ${valueColor}`}>{value}</p>
+      <p className="text-[11px] text-[var(--muted)] mt-0.5">{label}</p>
+    </div>
   );
 }
 
-function AttacksSection() {
+function BulletList({ items, accent = "muted" }: { items: string[]; accent?: "red" | "green" | "muted" }) {
+  const dotColor = {
+    red: "text-red-600 dark:text-red-400",
+    green: "text-green-600 dark:text-green-400",
+    muted: "text-[var(--muted)]",
+  }[accent];
   return (
-    <section id="attacks" className="space-y-4">
-      <h2 className="text-2xl font-bold flex items-center gap-3">
-        💥 Recent Attacks
-      </h2>
-      <div className="space-y-3">
-        {[
-          {
-            date: "Mar 3",
-            event: "Second wave of Iranian ballistic missiles targets Abu Dhabi and Dubai. THAAD and Patriot intercept majority. Some impacts reported near Jebel Ali.",
-            severity: "red" as const,
-          },
-          {
-            date: "Mar 1",
-            event: "Iran launches Shahed drones toward UAE oil infrastructure. Most intercepted by UAE/US air defense. Minor damage to Fujairah oil terminal.",
-            severity: "red" as const,
-          },
-          {
-            date: "Feb 28",
-            event: "Initial Iranian missile barrage hits Al Dhafra Air Base and civilian areas near Abu Dhabi. Multiple casualties confirmed. UAE declares state of emergency.",
-            severity: "red" as const,
-          },
-          {
-            date: "Feb 28",
-            event: "UAE activates NCEMA emergency protocols. All schools closed, work-from-home ordered for non-essential sectors.",
-            severity: "yellow" as const,
-          },
-        ].map((item, i) => (
-          <InfoCard key={i}>
-            <div className="flex gap-4">
-              <div className="flex-shrink-0">
-                <span
-                  className={`inline-block w-2 h-2 rounded-full mt-2 ${
-                    item.severity === "red" ? "bg-red-500" : "bg-yellow-500"
-                  }`}
-                />
-              </div>
-              <div>
-                <p className="text-xs font-mono text-[var(--muted)] mb-1">
-                  {item.date}, 2026
-                </p>
-                <p className="text-sm leading-relaxed">{item.event}</p>
-              </div>
+    <ul className="space-y-2">
+      {items.map((item, i) => (
+        <li key={i} className="flex gap-2.5 text-sm leading-relaxed">
+          <span className={`${dotColor} mt-px flex-shrink-0 select-none`}>—</span>
+          <span className="text-[var(--foreground)]">{item}</span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function InfoGrid({ items }: { items: { label: string; value: string; red?: boolean; yellow?: boolean }[] }) {
+  return (
+    <div className="grid grid-cols-2 gap-2">
+      {items.map((item) => (
+        <div key={item.label} className="bg-[var(--muted-bg)] rounded-md p-3">
+          <p className="text-[10px] text-[var(--muted)] uppercase tracking-wide">{item.label}</p>
+          <p className={`text-sm font-medium mt-0.5 ${
+            item.red ? "text-red-600 dark:text-red-400" : item.yellow ? "text-yellow-600 dark:text-yellow-400" : "text-[var(--foreground)]"
+          }`}>{item.value}</p>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function SectionLabel({ children, color = "muted" }: { children: React.ReactNode; color?: "muted" | "red" | "green" | "blue" | "yellow" }) {
+  const c = {
+    muted: "text-[var(--muted)]",
+    red: "text-red-600 dark:text-red-400",
+    green: "text-green-600 dark:text-green-400",
+    blue: "text-blue-600 dark:text-blue-400",
+    yellow: "text-yellow-600 dark:text-yellow-400",
+  }[color];
+  return <p className={`text-[10px] font-semibold ${c} uppercase tracking-widest mb-2.5`}>{children}</p>;
+}
+
+// ── Section Content Components ───────────────────────────
+
+function OverviewContent() {
+  return (
+    <Card className="p-4 space-y-4">
+      <div className="flex flex-wrap gap-2">
+        <StatusPill status="red" label="Active Conflict" />
+        <StatusPill status="red" label="Airspace Closed" />
+        <StatusPill status="yellow" label="Markets Disrupted" />
+      </div>
+      <p className="text-sm text-[var(--muted)] leading-relaxed">
+        Iran launched missile and drone strikes against UAE targets starting February 28, 2026. The UAE, backed by US CENTCOM, has responded with defensive intercepts and retaliatory strikes. This is the most significant military escalation in the Gulf since the 1980s.
+      </p>
+      <InfoGrid items={[
+        { label: "Conflict started", value: "Feb 28, 2026" },
+        { label: "Status", value: "Active", red: true },
+        { label: "Ceasefire", value: "None declared", yellow: true },
+        { label: "US involvement", value: "Active (CENTCOM)" },
+      ]} />
+    </Card>
+  );
+}
+
+function AttacksContent() {
+  const events = [
+    { date: "Mar 3, 2026", severity: "red" as const, event: "Second wave of Iranian ballistic missiles targets Abu Dhabi and Dubai. THAAD and Patriot intercept majority. Some impacts reported near Jebel Ali." },
+    { date: "Mar 1, 2026", severity: "red" as const, event: "Iran launches Shahed drones toward UAE oil infrastructure. Most intercepted. Minor damage to Fujairah oil terminal." },
+    { date: "Feb 28, 2026", severity: "red" as const, event: "Initial Iranian missile barrage hits Al Dhafra Air Base and civilian areas near Abu Dhabi. Multiple casualties. UAE declares state of emergency." },
+    { date: "Feb 28, 2026", severity: "yellow" as const, event: "UAE activates NCEMA emergency protocols. All schools closed, work-from-home ordered for non-essential sectors." },
+  ];
+  return (
+    <div className="space-y-1.5">
+      {events.map((item, i) => (
+        <Card key={i} className="p-4">
+          <div className="flex gap-3">
+            <span className={`mt-1.5 flex-shrink-0 w-1.5 h-1.5 rounded-full ${item.severity === "red" ? "bg-red-500" : "bg-yellow-500"}`} />
+            <div>
+              <p className="text-[10px] font-mono text-[var(--muted)] uppercase tracking-wide mb-1">{item.date}</p>
+              <p className="text-sm text-[var(--foreground)] leading-relaxed">{item.event}</p>
             </div>
-          </InfoCard>
+          </div>
+        </Card>
+      ))}
+    </div>
+  );
+}
+
+function IranContent() {
+  return (
+    <Card className="p-4 space-y-3">
+      <p className="text-sm text-[var(--muted)] leading-relaxed">
+        Iran claims strikes are in response to UAE hosting US military bases. Tehran describes the attacks as defensive and warns of further escalation.
+      </p>
+      <BulletList accent="red" items={[
+        "Demands UAE expel US military presence",
+        "Claims right to self-defense under UN Charter",
+        "Strait of Hormuz closed to 'hostile shipping'",
+        "Houthi allies launching concurrent attacks on Saudi Arabia",
+      ]} />
+    </Card>
+  );
+}
+
+function UAEContent() {
+  return (
+    <Card className="p-4 space-y-3">
+      <p className="text-sm text-[var(--muted)] leading-relaxed">
+        The UAE has activated full civil defense protocols and is coordinating closely with US CENTCOM. President Sheikh Mohamed has addressed the nation, calling for calm and resilience.
+      </p>
+      <BulletList accent="green" items={[
+        "THAAD and Patriot missile defense systems active",
+        "State of emergency declared nationwide",
+        "Schools and non-essential businesses closed",
+        "Free emergency supplies at civil defense centers",
+        "UN Security Council emergency session requested",
+      ]} />
+    </Card>
+  );
+}
+
+function CasualtiesContent() {
+  return (
+    <Card className="p-4 space-y-3">
+      <div className="grid grid-cols-2 gap-2">
+        <StatBox value="47+" label="Confirmed killed" color="red" />
+        <StatBox value="200+" label="Injured" color="yellow" />
+        <StatBox value="3" label="Infrastructure sites hit" color="orange" />
+        <StatBox value="80%+" label="Missiles intercepted" color="blue" />
+      </div>
+      <p className="text-[11px] text-[var(--muted)] leading-relaxed">
+        Figures based on official UAE/NCEMA statements. Updated Mar 4, 2026.
+      </p>
+    </Card>
+  );
+}
+
+function HistoryContent() {
+  return (
+    <Card className="p-4 space-y-2.5 text-sm text-[var(--muted)] leading-relaxed">
+      <p>Tensions driven by the UAE&apos;s strategic alliance with the US and its hosting of Al Dhafra Air Base — the largest US military installation in the region.</p>
+      <p>The trigger appears connected to escalating US-Iran tensions over Iran&apos;s nuclear program and the collapse of diplomatic talks in January 2026.</p>
+      <p>This follows the 2022 Houthi attacks on Abu Dhabi. The closure of the Strait of Hormuz marks a significant escalation affecting global energy markets.</p>
+    </Card>
+  );
+}
+
+function FlightsContent() {
+  return (
+    <>
+      <div className="grid grid-cols-2 gap-2">
+        {[
+          { code: "DXB", city: "Dubai", status: "Suspended", color: "red" },
+          { code: "AUH", city: "Abu Dhabi", status: "Suspended", color: "red" },
+          { code: "SHJ", city: "Sharjah", status: "Suspended", color: "red" },
+          { code: "UAE Airspace", city: "", status: "Civilian closed", color: "yellow" },
+        ].map((a) => (
+          <div key={a.code} className={`rounded-lg p-3 border ${
+            a.color === "red"
+              ? "bg-red-500/5 border-red-500/15 dark:bg-red-500/5"
+              : "bg-yellow-500/5 border-yellow-500/15"
+          }`}>
+            <p className={`text-[10px] font-semibold uppercase tracking-wide ${
+              a.color === "red" ? "text-red-600 dark:text-red-400" : "text-yellow-600 dark:text-yellow-400"
+            }`}>
+              {a.code}{a.city ? ` — ${a.city}` : ""}
+            </p>
+            <p className="text-sm font-medium mt-0.5 text-[var(--foreground)]">{a.status}</p>
+          </div>
         ))}
       </div>
-    </section>
-  );
-}
-
-function IranSection() {
-  return (
-    <section id="iran-position" className="space-y-4">
-      <h2 className="text-2xl font-bold flex items-center gap-3">
-        🇮🇷 Iran&apos;s Position
-      </h2>
-      <InfoCard>
-        <div className="space-y-3">
-          <p className="text-sm leading-relaxed text-[var(--muted)]">
-            Iran claims the strikes are in response to UAE hosting US military
-            bases used for operations against Iranian interests. Tehran describes
-            the attacks as &ldquo;defensive measures&rdquo; and warns of further
-            escalation if the UAE continues to allow US forces to operate from
-            its territory.
+      <Card className="p-4 space-y-2">
+        <SectionLabel color="green">Alternative Routes</SectionLabel>
+        {[
+          { dest: "Muscat, Oman", note: "Land border open, flights operating (~2hr from Dubai)" },
+          { dest: "Jeddah / Riyadh, KSA", note: "Limited flights, book early" },
+        ].map((r) => (
+          <p key={r.dest} className="text-sm">
+            <span className="font-medium text-[var(--foreground)]">{r.dest}</span>
+            <span className="text-[var(--muted)]"> — {r.note}</span>
           </p>
-          <ul className="space-y-2 text-sm">
-            <li className="flex gap-2">
-              <span className="text-red-400">•</span>
-              <span>Demands UAE expel US military presence</span>
-            </li>
-            <li className="flex gap-2">
-              <span className="text-red-400">•</span>
-              <span>Claims right to self-defense under UN Charter</span>
-            </li>
-            <li className="flex gap-2">
-              <span className="text-red-400">•</span>
-              <span>Strait of Hormuz closed to &ldquo;hostile shipping&rdquo;</span>
-            </li>
-            <li className="flex gap-2">
-              <span className="text-red-400">•</span>
-              <span>
-                Houthi allies launching concurrent attacks on Saudi Arabia
-              </span>
-            </li>
-          </ul>
-        </div>
-      </InfoCard>
-    </section>
-  );
-}
-
-function UAESection() {
-  return (
-    <section id="uae-response" className="space-y-4">
-      <h2 className="text-2xl font-bold flex items-center gap-3">
-        🇦🇪 UAE Response
-      </h2>
-      <InfoCard>
-        <div className="space-y-3">
-          <p className="text-sm leading-relaxed text-[var(--muted)]">
-            The UAE has activated full civil defense protocols and is
-            coordinating closely with US CENTCOM for air defense. President
-            Sheikh Mohamed has addressed the nation, calling for calm and
-            resilience.
-          </p>
-          <ul className="space-y-2 text-sm">
-            <li className="flex gap-2">
-              <span className="text-green-400">•</span>
-              <span>THAAD and Patriot missile defense systems active</span>
-            </li>
-            <li className="flex gap-2">
-              <span className="text-green-400">•</span>
-              <span>State of emergency declared nationwide</span>
-            </li>
-            <li className="flex gap-2">
-              <span className="text-green-400">•</span>
-              <span>Schools and non-essential businesses closed</span>
-            </li>
-            <li className="flex gap-2">
-              <span className="text-green-400">•</span>
-              <span>
-                Free emergency supplies distributed at civil defense centers
-              </span>
-            </li>
-            <li className="flex gap-2">
-              <span className="text-green-400">•</span>
-              <span>UN Security Council emergency session requested</span>
-            </li>
-          </ul>
-        </div>
-      </InfoCard>
-    </section>
-  );
-}
-
-function CasualtiesSection() {
-  return (
-    <section id="casualties" className="space-y-4">
-      <h2 className="text-2xl font-bold flex items-center gap-3">
-        🏥 Casualties & Damage
-      </h2>
-      <InfoCard>
-        <div className="grid grid-cols-2 gap-4">
-          <div className="bg-red-500/10 rounded-lg p-4 text-center">
-            <p className="text-2xl font-bold text-red-400">47+</p>
-            <p className="text-xs text-[var(--muted)] mt-1">
-              Confirmed killed
-            </p>
-          </div>
-          <div className="bg-yellow-500/10 rounded-lg p-4 text-center">
-            <p className="text-2xl font-bold text-yellow-400">200+</p>
-            <p className="text-xs text-[var(--muted)] mt-1">Injured</p>
-          </div>
-          <div className="bg-orange-500/10 rounded-lg p-4 text-center">
-            <p className="text-2xl font-bold text-orange-400">3</p>
-            <p className="text-xs text-[var(--muted)] mt-1">
-              Infrastructure sites hit
-            </p>
-          </div>
-          <div className="bg-blue-500/10 rounded-lg p-4 text-center">
-            <p className="text-2xl font-bold text-blue-400">80%+</p>
-            <p className="text-xs text-[var(--muted)] mt-1">
-              Missiles intercepted
-            </p>
-          </div>
-        </div>
-        <p className="text-xs text-[var(--muted)] mt-4">
-          ⚠️ Figures based on official UAE/NCEMA statements. Actual numbers may
-          differ. Updated Mar 4, 2026.
-        </p>
-      </InfoCard>
-    </section>
-  );
-}
-
-function HistorySection() {
-  return (
-    <section id="history" className="space-y-4">
-      <h2 className="text-2xl font-bold flex items-center gap-3">
-        📜 Background & History
-      </h2>
-      <InfoCard>
-        <div className="space-y-3 text-sm text-[var(--muted)] leading-relaxed">
-          <p>
-            Tensions between Iran and the UAE have been building for years, driven
-            by the UAE&apos;s strategic alliance with the US and its hosting of Al
-            Dhafra Air Base — the largest US military installation in the region.
-          </p>
-          <p>
-            The immediate trigger appears connected to escalating US-Iran tensions
-            over Iran&apos;s nuclear program and the collapse of diplomatic talks in
-            January 2026. Iran views Gulf states hosting US forces as complicit in
-            what it calls &ldquo;American aggression.&rdquo;
-          </p>
-          <p>
-            This follows the 2022 Houthi attacks on Abu Dhabi and the broader
-            regional proxy conflicts. The closure of the Strait of Hormuz marks a
-            significant escalation affecting global energy markets.
-          </p>
-        </div>
-      </InfoCard>
-    </section>
-  );
-}
-
-function FlightsSection() {
-  return (
-    <section id="flights" className="space-y-4">
-      <h2 className="text-2xl font-bold flex items-center gap-3">
-        ✈️ Flights & Airspace
-      </h2>
-      <InfoCard>
-        <div className="space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4">
-              <p className="text-xs text-red-400 font-semibold uppercase">
-                Dubai (DXB)
-              </p>
-              <p className="text-sm font-bold mt-1">Suspended</p>
-              <p className="text-xs text-[var(--muted)]">Since Feb 28</p>
-            </div>
-            <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4">
-              <p className="text-xs text-red-400 font-semibold uppercase">
-                Abu Dhabi (AUH)
-              </p>
-              <p className="text-sm font-bold mt-1">Suspended</p>
-              <p className="text-xs text-[var(--muted)]">Since Feb 28</p>
-            </div>
-            <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4">
-              <p className="text-xs text-red-400 font-semibold uppercase">
-                Sharjah (SHJ)
-              </p>
-              <p className="text-sm font-bold mt-1">Suspended</p>
-              <p className="text-xs text-[var(--muted)]">Since Feb 28</p>
-            </div>
-            <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-4">
-              <p className="text-xs text-yellow-400 font-semibold uppercase">
-                UAE Airspace
-              </p>
-              <p className="text-sm font-bold mt-1">Closed (Civilian)</p>
-              <p className="text-xs text-[var(--muted)]">
-                Military ops only
-              </p>
-            </div>
-          </div>
-
-          <div className="bg-[var(--muted-bg)] rounded-lg p-4">
-            <p className="text-xs font-semibold text-green-400 uppercase mb-2">
-              Alternative Routes
-            </p>
-            <ul className="space-y-2 text-sm">
-              <li className="flex gap-2">
-                <span className="text-green-400">✓</span>
-                <span>
-                  <strong>Muscat, Oman</strong> — Land border open, flights
-                  operating (~2hr drive from Dubai)
-                </span>
-              </li>
-              <li className="flex gap-2">
-                <span className="text-yellow-400">⚠</span>
-                <span>
-                  <strong>Jeddah/Riyadh, Saudi</strong> — Limited flights, book
-                  early
-                </span>
-              </li>
-            </ul>
-          </div>
-
-          <p className="text-xs text-[var(--muted)]">
-            Qatar, Bahrain, Kuwait airspace also closed to civilian traffic.
-            Check your airline for latest updates.
-          </p>
-        </div>
-      </InfoCard>
-
+        ))}
+      </Card>
+      <p className="text-[11px] text-[var(--muted)]">Qatar, Bahrain, Kuwait airspace also closed to civilian traffic.</p>
       <FlightBoard />
-    </section>
+    </>
   );
 }
 
-function MarketsSection() {
+function MarketsContent() {
   return (
-    <section id="markets" className="space-y-4">
-      <h2 className="text-2xl font-bold flex items-center gap-3">
-        📈 Markets & Economy
-      </h2>
-      <InfoCard>
-        <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-3">
-            <div className="bg-red-500/10 rounded-lg p-3">
-              <p className="text-xs text-[var(--muted)]">Stock Exchanges</p>
-              <p className="text-sm font-bold text-red-400">Closed</p>
-              <p className="text-xs text-[var(--muted)]">
-                Prevent panic selling
-              </p>
-            </div>
-            <div className="bg-yellow-500/10 rounded-lg p-3">
-              <p className="text-xs text-[var(--muted)]">Oil (Brent)</p>
-              <p className="text-sm font-bold text-yellow-400">$74+</p>
-              <p className="text-xs text-[var(--muted)]">Rising sharply</p>
-            </div>
-            <div className="bg-red-500/10 rounded-lg p-3">
-              <p className="text-xs text-[var(--muted)]">Strait of Hormuz</p>
-              <p className="text-sm font-bold text-red-400">Closed</p>
-              <p className="text-xs text-[var(--muted)]">
-                Shipping disrupted
-              </p>
-            </div>
-            <div className="bg-yellow-500/10 rounded-lg p-3">
-              <p className="text-xs text-[var(--muted)]">Banks</p>
-              <p className="text-sm font-bold text-yellow-400">Limited</p>
-              <p className="text-xs text-[var(--muted)]">Reduced hours</p>
-            </div>
-          </div>
-          <div className="bg-[var(--muted-bg)] rounded-lg p-4">
-            <p className="text-sm">
-              💡 <strong>Tip:</strong> ATMs are working but expect queues.
-              Withdraw cash for essential purchases. Keep AED 500–1000 on hand.
-            </p>
-          </div>
-        </div>
-      </InfoCard>
-    </section>
+    <Card className="p-4 space-y-3">
+      <div className="grid grid-cols-2 gap-2">
+        <StatBox value="Closed" label="Stock exchanges" color="red" />
+        <StatBox value="$74+" label="Oil (Brent)" color="yellow" />
+        <StatBox value="Closed" label="Strait of Hormuz" color="red" />
+        <StatBox value="Limited" label="Banks" color="yellow" />
+      </div>
+      <div className="bg-[var(--muted-bg)] rounded-md p-3">
+        <p className="text-sm text-[var(--foreground)] leading-relaxed">
+          <strong>Tip:</strong>{" "}
+          <span className="text-[var(--muted)]">ATMs are working but expect queues. Withdraw cash for essential purchases. Keep AED 500–1000 on hand.</span>
+        </p>
+      </div>
+    </Card>
   );
 }
 
-function EmergencySection() {
+function EmergencyContent() {
   return (
-    <section id="emergency" className="space-y-4">
-      <h2 className="text-2xl font-bold flex items-center gap-3">
-        🚨 Emergency Contacts
-      </h2>
-      <InfoCard>
-        <div className="space-y-4">
-          <h3 className="text-sm font-bold text-red-400 uppercase tracking-wider">
-            UAE Emergency Numbers
-          </h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            {EMERGENCY_CONTACTS.uae.map((c) => (
-              <a
-                key={c.number}
-                href={`tel:${c.number}`}
-                className="flex justify-between items-center bg-[var(--muted-bg)] rounded-xl px-4 py-3 hover:bg-red-500/10 transition-colors"
-              >
-                <span className="text-sm">{c.label}</span>
-                <span className="text-lg font-bold text-red-400 font-mono">
-                  {c.number}
-                </span>
-              </a>
-            ))}
-          </div>
+    <>
+      <Card className="p-4 space-y-3">
+        <SectionLabel>UAE Numbers</SectionLabel>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+          {EMERGENCY_CONTACTS.uae.map((c) => (
+            <a key={c.number} href={`tel:${c.number}`}
+              className="flex justify-between items-center bg-[var(--muted-bg)] rounded-md px-3.5 py-2.5 hover:bg-[var(--surface)] transition-colors">
+              <span className="text-sm text-[var(--foreground)]">{c.label}</span>
+              <span className="text-base font-bold text-[var(--accent)] font-mono">{c.number}</span>
+            </a>
+          ))}
         </div>
-      </InfoCard>
-
-      <InfoCard>
-        <div className="space-y-4">
-          <h3 className="text-sm font-bold text-blue-400 uppercase tracking-wider">
-            Embassies (Abu Dhabi)
-          </h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            {EMERGENCY_CONTACTS.embassies.map((e) => (
-              <a
-                key={e.phone}
-                href={`tel:${e.phone}`}
-                className="flex justify-between items-center bg-[var(--muted-bg)] rounded-xl px-4 py-3 hover:bg-blue-500/10 transition-colors gap-3"
-              >
-                <span className="text-sm whitespace-nowrap">{e.country}</span>
-                <span className="text-xs font-mono text-[var(--muted)]">
-                  {e.phone}
-                </span>
-              </a>
-            ))}
-          </div>
+      </Card>
+      <Card className="p-4 space-y-3">
+        <SectionLabel>Embassies — Abu Dhabi</SectionLabel>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+          {EMERGENCY_CONTACTS.embassies.map((e) => (
+            <a key={e.phone} href={`tel:${e.phone}`}
+              className="flex justify-between items-center bg-[var(--muted-bg)] rounded-md px-3.5 py-2.5 hover:bg-[var(--surface)] transition-colors gap-3">
+              <span className="text-sm text-[var(--foreground)] whitespace-nowrap">{e.country}</span>
+              <span className="text-xs font-mono text-[var(--muted)]">{e.phone}</span>
+            </a>
+          ))}
         </div>
-      </InfoCard>
-    </section>
+      </Card>
+    </>
   );
 }
 
-function ShelterSection() {
+function ShelterContent() {
+  const steps = [
+    "Move to an interior room with no windows",
+    "Stay away from glass, mirrors, and exterior walls",
+    "If in a high-rise: go to lower floors or interior stairwell",
+    "If outside: enter the nearest solid building immediately",
+    "If driving: pull over safely, stay low in the car",
+    "Do not touch debris or shrapnel — may be hazardous",
+  ];
   return (
-    <section id="shelter" className="space-y-4">
-      <h2 className="text-2xl font-bold flex items-center gap-3">
-        🏠 During an Alert
-      </h2>
-
-      <div className="bg-red-600/20 border border-red-500/30 rounded-xl p-5">
-        <h3 className="text-sm font-bold text-red-400 uppercase tracking-wider mb-3">
-          ⚡ Immediate Steps
-        </h3>
-        <ol className="space-y-3">
-          {[
-            "Move to an interior room (no windows)",
-            "Stay away from glass, mirrors, and exterior walls",
-            "If in a high-rise: go to lower floors or interior stairwell",
-            "If outside: enter the nearest solid building immediately",
-            "If driving: pull over safely, stay low in the car",
-            "Do NOT touch debris or shrapnel — may be hazardous",
-          ].map((step, i) => (
-            <li key={i} className="flex gap-3 text-sm">
-              <span className="flex-shrink-0 w-6 h-6 rounded-full bg-red-500/30 flex items-center justify-center text-xs font-bold text-red-300">
-                {i + 1}
-              </span>
-              <span>{step}</span>
+    <>
+      <div className="bg-red-500/5 border border-red-500/15 rounded-lg p-4">
+        <SectionLabel color="red">Immediate Steps</SectionLabel>
+        <ol className="space-y-2.5">
+          {steps.map((step, i) => (
+            <li key={i} className="flex gap-3 text-sm leading-relaxed">
+              <span className="flex-shrink-0 text-[var(--muted)] font-mono text-[11px] w-4 pt-px">{String(i + 1).padStart(2, "0")}</span>
+              <span className="text-[var(--foreground)]">{step}</span>
             </li>
           ))}
         </ol>
       </div>
-
-      <InfoCard>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <Card className="p-4">
+        <div className="grid grid-cols-2 gap-4">
           <div>
-            <p className="text-xs font-semibold text-green-400 uppercase mb-2">
-              ✅ Best Locations
-            </p>
-            <ul className="space-y-1 text-sm text-[var(--muted)]">
-              <li>• Bathroom (interior, small windows)</li>
-              <li>• Interior hallway</li>
-              <li>• Stairwell (interior)</li>
-              <li>• Underground parking</li>
-              <li>• Ground floor interior room</li>
-            </ul>
-          </div>
-          <div>
-            <p className="text-xs font-semibold text-red-400 uppercase mb-2">
-              ❌ Avoid
-            </p>
-            <ul className="space-y-1 text-sm text-[var(--muted)]">
-              <li>• Windows and glass doors</li>
-              <li>• Balconies</li>
-              <li>• Exterior walls</li>
-              <li>• Top floors of buildings</li>
-              <li>• Open areas / outdoors</li>
-            </ul>
-          </div>
-        </div>
-      </InfoCard>
-    </section>
-  );
-}
-
-function SuppliesSection() {
-  return (
-    <section id="supplies" className="space-y-4">
-      <h2 className="text-2xl font-bold flex items-center gap-3">
-        🧳 Supplies Checklist
-      </h2>
-
-      <InfoCard>
-        <div className="space-y-5">
-          <div>
-            <h3 className="text-xs font-bold text-green-400 uppercase tracking-wider mb-3">
-              Essential Supplies
-            </h3>
-            <div className="space-y-2">
-              {[
-                "Water — 4L per person per day, 3+ day supply",
-                "Non-perishable food (canned, dried, energy bars)",
-                "Flashlight + extra batteries",
-                "Phone chargers + power bank (fully charged)",
-                "Cash — AED 500–1000 (ATMs may go down)",
-                "First aid kit",
-                "Medications — 1 week minimum supply",
-                "Whistle (to signal for help if trapped)",
-                "Dust masks or cloth face coverings",
-              ].map((item, i) => (
-                <label
-                  key={i}
-                  className="flex gap-3 items-start checklist-item cursor-pointer hover:bg-[var(--muted-bg)] rounded-lg px-3 py-2 transition-colors"
-                >
-                  <input type="checkbox" className="mt-0.5 flex-shrink-0" />
-                  <span className="text-sm">{item}</span>
-                </label>
+            <SectionLabel color="green">Best Locations</SectionLabel>
+            <ul className="space-y-1.5 text-sm">
+              {["Bathroom (interior)", "Interior hallway", "Stairwell (interior)", "Underground parking", "Ground floor interior"].map((item) => (
+                <li key={item} className="flex gap-2">
+                  <span className="text-green-600 dark:text-green-400 flex-shrink-0">+</span>
+                  <span className="text-[var(--foreground)]">{item}</span>
+                </li>
               ))}
-            </div>
+            </ul>
           </div>
-
           <div>
-            <h3 className="text-xs font-bold text-blue-400 uppercase tracking-wider mb-3">
-              Important Documents
-            </h3>
-            <div className="space-y-2">
-              {[
-                "Passport (keep accessible, not in luggage)",
-                "Emirates ID",
-                "Insurance papers / policy numbers",
-                "Emergency contacts list (PRINTED — phones die)",
-                "Copies of visa / residence permit",
-              ].map((item, i) => (
-                <label
-                  key={i}
-                  className="flex gap-3 items-start checklist-item cursor-pointer hover:bg-[var(--muted-bg)] rounded-lg px-3 py-2 transition-colors"
-                >
-                  <input type="checkbox" className="mt-0.5 flex-shrink-0" />
-                  <span className="text-sm">{item}</span>
-                </label>
+            <SectionLabel color="red">Avoid</SectionLabel>
+            <ul className="space-y-1.5 text-sm">
+              {["Windows / glass doors", "Balconies", "Exterior walls", "Top floors", "Open areas / outdoors"].map((item) => (
+                <li key={item} className="flex gap-2">
+                  <span className="text-red-600 dark:text-red-400 flex-shrink-0">−</span>
+                  <span className="text-[var(--foreground)]">{item}</span>
+                </li>
               ))}
-            </div>
-          </div>
-
-          <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-4">
-            <p className="text-sm">
-              🎒 <strong>Keep a grab bag near the door</strong> with passport,
-              phone charger, water, cash, and medications. If you need to leave
-              fast, grab it and go.
-            </p>
-          </div>
-        </div>
-      </InfoCard>
-    </section>
-  );
-}
-
-function ExitSection() {
-  return (
-    <section id="exit" className="space-y-4">
-      <h2 className="text-2xl font-bold flex items-center gap-3">
-        🚪 If You Need to Leave
-      </h2>
-
-      <InfoCard>
-        <div className="space-y-4">
-          <div>
-            <h3 className="text-xs font-bold text-green-400 uppercase tracking-wider mb-3">
-              🚗 Land Routes
-            </h3>
-            <div className="space-y-2">
-              <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-4">
-                <p className="text-sm font-semibold">
-                  Oman via Hatta Border
-                </p>
-                <p className="text-xs text-[var(--muted)] mt-1">
-                  ~2hr from Dubai • Border OPEN • Most reliable option
-                </p>
-              </div>
-              <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-4">
-                <p className="text-sm font-semibold">
-                  Saudi Arabia via Abu Samra
-                </p>
-                <p className="text-xs text-[var(--muted)] mt-1">
-                  Check current status • May require visa • Longer route
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div>
-            <h3 className="text-xs font-bold text-blue-400 uppercase tracking-wider mb-3">
-              ✈️ Flights From Neighboring Countries
-            </h3>
-            <div className="space-y-2">
-              <div className="bg-[var(--muted-bg)] rounded-lg p-4">
-                <p className="text-sm font-semibold">Muscat, Oman (MCT)</p>
-                <p className="text-xs text-[var(--muted)] mt-1">
-                  Emirates/Oman Air operating some routes • Book ASAP • Prices
-                  elevated
-                </p>
-              </div>
-              <div className="bg-[var(--muted-bg)] rounded-lg p-4">
-                <p className="text-sm font-semibold">
-                  Jeddah / Riyadh, Saudi
-                </p>
-                <p className="text-xs text-[var(--muted)] mt-1">
-                  Limited availability • Saudia operating reduced schedule
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
-            <p className="text-sm">
-              🏛️ <strong>Embassy evacuation:</strong> Contact your embassy for
-              assisted evacuation if you cannot arrange travel independently.
-              Many embassies are organizing group evacuations.
-            </p>
-          </div>
-
-          <p className="text-xs text-[var(--muted)]">
-            ⚠️ Book early — prices are high and availability is limited. Land
-            routes to Oman are the most reliable current option.
-          </p>
-        </div>
-      </InfoCard>
-    </section>
-  );
-}
-
-function InformedSection() {
-  return (
-    <section id="informed" className="space-y-4">
-      <h2 className="text-2xl font-bold flex items-center gap-3">
-        📡 Stay Informed
-      </h2>
-
-      <InfoCard>
-        <div className="space-y-4">
-          <div>
-            <h3 className="text-xs font-bold text-green-400 uppercase tracking-wider mb-3">
-              ✅ Official Sources
-            </h3>
-            <ul className="space-y-2 text-sm">
-              <li className="flex gap-2">
-                <span className="text-green-400">•</span>
-                <span>
-                  <strong>NCEMA</strong> — @NCABORHAP_NCEMA (Twitter/X)
-                </span>
-              </li>
-              <li className="flex gap-2">
-                <span className="text-green-400">•</span>
-                <span>
-                  <strong>Dubai Media Office</strong> — @DXBMediaOffice
-                </span>
-              </li>
-              <li className="flex gap-2">
-                <span className="text-green-400">•</span>
-                <span>
-                  <strong>WAM</strong> — Emirates News Agency (wam.ae)
-                </span>
-              </li>
-              <li className="flex gap-2">
-                <span className="text-green-400">•</span>
-                <span>
-                  <strong>Your embassy</strong> — Check for country-specific
-                  advisories
-                </span>
-              </li>
             </ul>
           </div>
-
-          <div>
-            <h3 className="text-xs font-bold text-red-400 uppercase tracking-wider mb-3">
-              ❌ Avoid
-            </h3>
-            <ul className="space-y-2 text-sm text-[var(--muted)]">
-              <li>• Unverified social media accounts</li>
-              <li>• Forwarded WhatsApp messages</li>
-              <li>• Sensationalist / clickbait accounts</li>
-              <li>• &ldquo;Breaking news&rdquo; from unknown sources</li>
-            </ul>
-          </div>
-
-          <div className="bg-[var(--muted-bg)] rounded-lg p-4">
-            <p className="text-sm">
-              📱 <strong>Mobile & internet are working normally.</strong> Enable
-              NCEMA push notifications on your phone. Keep your phone charged at
-              all times.
-            </p>
-          </div>
         </div>
-      </InfoCard>
-    </section>
+      </Card>
+    </>
   );
 }
 
-// ─── Main Page ──────────────────────────────────────────
+function SuppliesContent() {
+  const essentials = [
+    "Water — 4L per person per day, 3+ day supply",
+    "Non-perishable food (canned, dried, energy bars)",
+    "Flashlight + extra batteries",
+    "Phone chargers + power bank (fully charged)",
+    "Cash — AED 500–1000 (ATMs may go down)",
+    "First aid kit",
+    "Medications — 1 week minimum supply",
+    "Whistle (to signal for help if trapped)",
+    "Dust masks or cloth face coverings",
+  ];
+  const documents = [
+    "Passport (keep accessible, not in luggage)",
+    "Emirates ID",
+    "Insurance papers / policy numbers",
+    "Emergency contacts list (printed — phones die)",
+    "Copies of visa / residence permit",
+  ];
+  return (
+    <Card className="p-4 space-y-5">
+      <div>
+        <SectionLabel color="green">Essential Supplies</SectionLabel>
+        <div className="space-y-0.5">
+          {essentials.map((item, i) => (
+            <label key={i} className="flex gap-3 items-start checklist-item cursor-pointer hover:bg-[var(--muted-bg)] rounded-md px-2.5 py-2 transition-colors">
+              <input type="checkbox" className="mt-0.5 flex-shrink-0" />
+              <span className="text-sm text-[var(--foreground)]">{item}</span>
+            </label>
+          ))}
+        </div>
+      </div>
+      <div>
+        <SectionLabel color="blue">Important Documents</SectionLabel>
+        <div className="space-y-0.5">
+          {documents.map((item, i) => (
+            <label key={i} className="flex gap-3 items-start checklist-item cursor-pointer hover:bg-[var(--muted-bg)] rounded-md px-2.5 py-2 transition-colors">
+              <input type="checkbox" className="mt-0.5 flex-shrink-0" />
+              <span className="text-sm text-[var(--foreground)]">{item}</span>
+            </label>
+          ))}
+        </div>
+      </div>
+      <div className="bg-[var(--muted-bg)] rounded-md p-3">
+        <p className="text-sm text-[var(--foreground)] leading-relaxed">
+          <strong>Keep a grab bag near the door</strong>{" "}
+          <span className="text-[var(--muted)]">with passport, charger, water, cash, and medications.</span>
+        </p>
+      </div>
+    </Card>
+  );
+}
 
+function ExitContent() {
+  return (
+    <Card className="p-4 space-y-4">
+      <div>
+        <SectionLabel color="green">Land Routes</SectionLabel>
+        <div className="space-y-1.5">
+          <div className="bg-green-500/5 border border-green-500/15 rounded-md p-3">
+            <p className="text-sm font-medium text-[var(--foreground)]">Oman via Hatta Border</p>
+            <p className="text-xs text-[var(--muted)] mt-0.5">~2hr from Dubai — Border OPEN — Most reliable option</p>
+          </div>
+          <div className="bg-yellow-500/5 border border-yellow-500/15 rounded-md p-3">
+            <p className="text-sm font-medium text-[var(--foreground)]">Saudi Arabia via Abu Samra</p>
+            <p className="text-xs text-[var(--muted)] mt-0.5">Check current status — May require visa — Longer route</p>
+          </div>
+        </div>
+      </div>
+      <div>
+        <SectionLabel color="blue">Flights from Neighbors</SectionLabel>
+        <div className="space-y-1.5">
+          {[
+            { dest: "Muscat, Oman (MCT)", note: "Emirates / Oman Air operating — Book ASAP — Prices elevated" },
+            { dest: "Jeddah / Riyadh, Saudi", note: "Limited availability — Saudia operating reduced schedule" },
+          ].map((r) => (
+            <div key={r.dest} className="bg-[var(--muted-bg)] rounded-md p-3">
+              <p className="text-sm font-medium text-[var(--foreground)]">{r.dest}</p>
+              <p className="text-xs text-[var(--muted)] mt-0.5">{r.note}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div className="bg-blue-500/5 border border-blue-500/15 rounded-md p-3">
+        <p className="text-sm text-[var(--foreground)] leading-relaxed">
+          <strong>Embassy evacuation:</strong>{" "}
+          <span className="text-[var(--muted)]">Contact your embassy if you cannot arrange travel independently. Many embassies are organizing group evacuations.</span>
+        </p>
+      </div>
+    </Card>
+  );
+}
+
+function InformedContent() {
+  return (
+    <Card className="p-4 space-y-4">
+      <div>
+        <SectionLabel color="green">Official Sources</SectionLabel>
+        <ul className="space-y-2 text-sm">
+          {[
+            { name: "NCEMA", handle: "@NCABORHAP_NCEMA (X / Twitter)" },
+            { name: "Dubai Media Office", handle: "@DXBMediaOffice" },
+            { name: "WAM", handle: "Emirates News Agency (wam.ae)" },
+            { name: "Your embassy", handle: "Country-specific travel advisories" },
+          ].map((s) => (
+            <li key={s.name} className="flex gap-2.5">
+              <span className="text-green-600 dark:text-green-400 flex-shrink-0">+</span>
+              <span className="text-[var(--foreground)]">
+                <strong>{s.name}</strong>{" "}
+                <span className="text-[var(--muted)]">— {s.handle}</span>
+              </span>
+            </li>
+          ))}
+        </ul>
+      </div>
+      <div>
+        <SectionLabel color="red">Avoid</SectionLabel>
+        <BulletList accent="red" items={[
+          "Unverified social media accounts",
+          "Forwarded WhatsApp messages",
+          "Sensationalist / clickbait accounts",
+          "Breaking news from unknown sources",
+        ]} />
+      </div>
+      <div className="bg-[var(--muted-bg)] rounded-md p-3">
+        <p className="text-sm text-[var(--foreground)] leading-relaxed">
+          <strong>Mobile and internet are working normally.</strong>{" "}
+          <span className="text-[var(--muted)]">Enable NCEMA push notifications. Keep your phone charged at all times.</span>
+        </p>
+      </div>
+    </Card>
+  );
+}
+
+// ── All sections in order ────────────────────────────────
+const ALL_SECTIONS = [
+  { id: "overview",       title: "Overview",            content: <OverviewContent /> },
+  { id: "attacks",        title: "Recent Attacks",       content: <AttacksContent /> },
+  { id: "iran-position",  title: "Iran's Position",      content: <IranContent /> },
+  { id: "uae-response",   title: "UAE Response",         content: <UAEContent /> },
+  { id: "casualties",     title: "Casualties & Damage",  content: <CasualtiesContent /> },
+  { id: "history",        title: "Background",           content: <HistoryContent /> },
+  { id: "flights",        title: "Flights & Airspace",   content: <FlightsContent /> },
+  { id: "markets",        title: "Markets & Economy",    content: <MarketsContent /> },
+  { id: "emergency",      title: "Emergency Contacts",   content: <EmergencyContent /> },
+  { id: "shelter",        title: "During an Alert",      content: <ShelterContent /> },
+  { id: "supplies",       title: "Supplies Checklist",   content: <SuppliesContent /> },
+  { id: "exit",           title: "Exit Options",         content: <ExitContent /> },
+  { id: "informed",       title: "Stay Informed",        content: <InformedContent /> },
+] as const;
+
+// ── Main Page ────────────────────────────────────────────
 export default function Home() {
   const [activeSection, setActiveSection] = useState("overview");
-  const [showEmergency, setShowEmergency] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { theme, toggle: toggleTheme } = useTheme();
 
-  const navigateTo = (id: string) => {
-    setMobileMenuOpen(false);
+  const navigateTo = useCallback((id: string) => {
     const el = document.getElementById(id);
-    if (el) {
-      el.scrollIntoView({ behavior: "smooth" });
-    }
-  };
+    if (el) el.scrollIntoView({ behavior: "smooth" });
+  }, []);
 
-  // Track active section on scroll
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {
-          if (entry.isIntersecting) {
-            setActiveSection(entry.target.id);
-          }
+          if (entry.isIntersecting) setActiveSection(entry.target.id);
         }
       },
-      { rootMargin: "-20% 0px -70% 0px" }
+      { rootMargin: "-10% 0px -80% 0px" }
     );
-
-    SECTIONS_META.forEach((s) => {
-      const el = document.getElementById(s.id);
+    ALL_SECTIONS.forEach(({ id }) => {
+      const el = document.getElementById(id);
       if (el) observer.observe(el);
     });
-
     return () => observer.disconnect();
   }, []);
 
-  const practicalSections = SECTIONS_META.filter(
-    (s) => s.category === "practical"
-  );
-
   return (
     <>
-      <Sidebar activeSection={activeSection} onNavigate={navigateTo} />
+      <ReadingProgress />
+      <Sidebar activeSection={activeSection} onNavigate={navigateTo} theme={theme} onToggleTheme={toggleTheme} />
+      <MobileTopBar activeSection={activeSection} onNavigate={navigateTo} theme={theme} onToggleTheme={toggleTheme} />
 
-      {/* Mobile Header */}
-      <header className="lg:hidden fixed top-0 left-0 right-0 bg-[var(--card)]/95 backdrop-blur-lg border-b border-[var(--card-border)] z-50 px-4 h-14 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <span className="text-red-500 text-lg">🚨</span>
-          <h1 className="text-sm font-bold">Iran-UAE Explainer</h1>
-        </div>
-        <button
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          className="text-[var(--muted)] p-2"
-        >
-          {mobileMenuOpen ? "✕" : "☰"}
-        </button>
-      </header>
+      <main className="lg:ml-56 pt-[88px] lg:pt-0 pb-20 px-4 sm:px-6 lg:px-12 max-w-3xl">
 
-      {/* Mobile Menu Overlay */}
-      {mobileMenuOpen && (
-        <div className="lg:hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-[60] pt-14">
-          <div className="bg-[var(--card)] h-full overflow-y-auto p-4">
-            <p className="text-[10px] font-semibold text-[var(--muted)] uppercase tracking-widest mb-2">
-              Situation
-            </p>
-            {SECTIONS_META.filter((s) => s.category === "situation").map(
-              (s) => (
-                <button
-                  key={s.id}
-                  onClick={() => navigateTo(s.id)}
-                  className="w-full text-left px-3 py-3 rounded-lg text-sm text-[var(--foreground)] hover:bg-[var(--muted-bg)] flex items-center gap-3"
-                >
-                  <span>{s.emoji}</span>
-                  {s.title}
-                </button>
-              )
-            )}
-            <p className="text-[10px] font-semibold text-[var(--muted)] uppercase tracking-widest mt-4 mb-2">
-              Practical
-            </p>
-            {SECTIONS_META.filter((s) => s.category === "practical").map(
-              (s) => (
-                <button
-                  key={s.id}
-                  onClick={() => navigateTo(s.id)}
-                  className="w-full text-left px-3 py-3 rounded-lg text-sm text-[var(--foreground)] hover:bg-[var(--muted-bg)] flex items-center gap-3"
-                >
-                  <span>{s.emoji}</span>
-                  {s.title}
-                </button>
-              )
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Main Content */}
-      <main className="lg:ml-56 pt-16 lg:pt-0 pb-24 lg:pb-8 px-4 sm:px-6 lg:px-12 max-w-4xl">
         {/* Hero */}
-        <div className="py-8 lg:py-12">
+        <div className="py-8 lg:py-12 border-b border-[var(--card-border)] mb-10">
           <div className="flex items-center gap-2 mb-4">
-            <StatusBadge status="red" label="Live Updates" />
-            <span className="text-xs text-[var(--muted)]">
-              Mar 4, 2026 • 02:00 GMT+4
-            </span>
+            <StatusPill status="red" label="Live Updates" />
+            <span className="text-xs text-[var(--muted)]">Mar 4, 2026 — 02:00 GMT+4</span>
           </div>
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight">
-            Iran-UAE Conflict
-            <br />
-            <span className="text-[var(--muted)]">What You Need to Know</span>
+          <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-balance text-[var(--foreground)]">
+            Iran–UAE Conflict
           </h1>
-          <p className="text-[var(--muted)] mt-4 text-sm sm:text-base max-w-2xl leading-relaxed">
-            Practical information for UAE residents during the current crisis.
-            Emergency contacts, shelter guidance, flight status, and exit
-            options — all in one place.
+          <p className="text-lg text-[var(--muted)] mt-1 font-normal tracking-tight">
+            What You Need to Know
           </p>
-        </div>
+          <p className="text-sm text-[var(--muted)] mt-3 max-w-lg leading-relaxed">
+            Emergency contacts, shelter guidance, flight status, and exit options for UAE residents during the current crisis.
+          </p>
 
-        {/* Quick Jump Cards */}
-        <div className="mb-12">
-          <h2 className="text-xs font-bold text-[var(--muted)] uppercase tracking-widest mb-4">
-            Quick Access
-          </h2>
-          <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-7 gap-2">
-            {practicalSections.map((s) => (
-              <SectionCard
-                key={s.id}
-                emoji={s.emoji}
-                title={s.shortTitle}
-                onClick={() => navigateTo(s.id)}
-                highlight={s.id === "emergency" || s.id === "shelter"}
-              />
+          {/* Quick action pills */}
+          <div className="flex flex-wrap gap-2 mt-5">
+            {[
+              { id: "emergency", label: "Emergency Contacts", accent: true },
+              { id: "shelter",   label: "Shelter Guide" },
+              { id: "exit",      label: "Exit Options" },
+              { id: "flights",   label: "Flights" },
+            ].map((a) => (
+              <button
+                key={a.id}
+                onClick={() => navigateTo(a.id)}
+                className={`text-xs font-medium px-3 py-1.5 rounded-full border transition-colors ${
+                  a.accent
+                    ? "bg-[var(--accent)]/10 border-[var(--accent)]/25 text-[var(--accent)] hover:bg-[var(--accent)]/15"
+                    : "border-[var(--card-border)] text-[var(--muted)] hover:text-[var(--foreground)] hover:border-[var(--muted)]"
+                }`}
+              >
+                {a.label}
+              </button>
             ))}
           </div>
         </div>
 
-        {/* All Sections */}
-        <div className="space-y-12">
-          {/* Situation */}
+        {/* Sections */}
+        <div className="space-y-10">
+          {/* Situation group */}
           <div>
-            <h2 className="text-xs font-bold text-[var(--muted)] uppercase tracking-widest mb-6 flex items-center gap-2">
-              <span className="w-8 h-px bg-[var(--card-border)]" />
-              The Situation
-              <span className="flex-1 h-px bg-[var(--card-border)]" />
-            </h2>
-            <div className="space-y-10">
-              <OverviewSection />
-              <AttacksSection />
-              <IranSection />
-              <UAESection />
-              <CasualtiesSection />
-              <HistorySection />
+            <p className="text-[10px] font-semibold text-[var(--muted)] uppercase tracking-widest mb-6">The Situation</p>
+            <div className="space-y-8">
+              {ALL_SECTIONS.slice(0, 6).map((s, i, arr) => (
+                <CollapsibleSection
+                  key={s.id}
+                  id={s.id}
+                  title={s.title}
+                  nextSection={i < arr.length - 1 ? { id: arr[i + 1].id, shortTitle: SECTIONS_META.find(m => m.id === arr[i + 1].id)?.shortTitle ?? arr[i + 1].title } : undefined}
+                  onNavigate={navigateTo}
+                >
+                  {s.content}
+                </CollapsibleSection>
+              ))}
             </div>
           </div>
 
-          {/* Practical */}
+          <div className="border-t border-[var(--card-border)]" />
+
+          {/* Practical group */}
           <div>
-            <h2 className="text-xs font-bold text-[var(--muted)] uppercase tracking-widest mb-6 flex items-center gap-2">
-              <span className="w-8 h-px bg-[var(--card-border)]" />
-              Practical Guide
-              <span className="flex-1 h-px bg-[var(--card-border)]" />
-            </h2>
-            <div className="space-y-10">
-              <FlightsSection />
-              <MarketsSection />
-              <EmergencySection />
-              <ShelterSection />
-              <SuppliesSection />
-              <ExitSection />
-              <InformedSection />
+            <p className="text-[10px] font-semibold text-[var(--muted)] uppercase tracking-widest mb-6">Practical Guide</p>
+            <div className="space-y-8">
+              {ALL_SECTIONS.slice(6).map((s, i, arr) => (
+                <CollapsibleSection
+                  key={s.id}
+                  id={s.id}
+                  title={s.title}
+                  nextSection={i < arr.length - 1 ? { id: arr[i + 1].id, shortTitle: SECTIONS_META.find(m => m.id === arr[i + 1].id)?.shortTitle ?? arr[i + 1].title } : undefined}
+                  onNavigate={navigateTo}
+                >
+                  {s.content}
+                </CollapsibleSection>
+              ))}
             </div>
           </div>
         </div>
 
-        {/* Footer */}
-        <footer className="mt-16 pt-8 border-t border-[var(--card-border)] text-center text-xs text-[var(--muted)] space-y-2">
-          <p>
-            This page is for informational purposes only. Always follow official
-            UAE government guidance.
-          </p>
-          <p>
-            Last updated: March 4, 2026, 02:00 GMT+4
-          </p>
-          <p>
-            Built with care for UAE residents. Stay safe. 🤍
-          </p>
+        <footer className="mt-14 pt-6 border-t border-[var(--card-border)] space-y-1">
+          <p className="text-xs text-[var(--muted)]">For informational purposes only. Always follow official UAE government guidance.</p>
+          <p className="text-xs text-[var(--muted)]">Last updated: March 4, 2026, 02:00 GMT+4</p>
         </footer>
       </main>
-
-      {/* Floating Emergency Button */}
-      <EmergencyFAB onClick={() => setShowEmergency(true)} />
-
-      {/* Bottom Nav (mobile) */}
-      <BottomNav
-        onNavigate={navigateTo}
-        onEmergency={() => setShowEmergency(true)}
-      />
-
-      {/* Emergency Modal */}
-      {showEmergency && (
-        <EmergencyModal onClose={() => setShowEmergency(false)} />
-      )}
     </>
   );
 }

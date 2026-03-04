@@ -13,12 +13,12 @@ const AIRPORTS: { code: AirportCode; label: string }[] = [
 ];
 
 const STATUS_COLORS: Record<string, string> = {
-  scheduled: "text-green-400",
-  active: "text-green-400",
-  landed: "text-green-400",
-  delayed: "text-yellow-400",
-  cancelled: "text-red-400",
-  diverted: "text-red-400",
+  scheduled: "text-green-600 dark:text-green-400",
+  active: "text-green-600 dark:text-green-400",
+  landed: "text-green-600 dark:text-green-400",
+  delayed: "text-yellow-600 dark:text-yellow-400",
+  cancelled: "text-red-600 dark:text-red-400",
+  diverted: "text-red-600 dark:text-red-400",
 };
 
 function formatTime(iso: string | null): string {
@@ -188,7 +188,7 @@ export default function FlightBoard() {
           <button
             onClick={handleRefresh}
             disabled={loading}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-blue-500/10 text-blue-400 border border-blue-500/20 hover:bg-blue-500/20 transition-colors disabled:opacity-50"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 hover:bg-blue-500/20 transition-colors disabled:opacity-50"
           >
             <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
             {hasLoaded ? "Refresh" : "Load Flights"}
@@ -204,8 +204,8 @@ export default function FlightBoard() {
             onClick={() => handleAirportChange(a.code)}
             className={`px-3 py-1.5 text-xs font-semibold rounded-full border transition-colors ${
               airport === a.code
-                ? "bg-white/10 border-white/20 text-white"
-                : "border-[var(--card-border)] text-[var(--muted)] hover:text-white hover:border-white/20"
+                ? "bg-[var(--surface)] border-[var(--muted)] text-[var(--foreground)]"
+                : "border-[var(--card-border)] text-[var(--muted)] hover:text-[var(--foreground)] hover:border-[var(--muted)]"
             }`}
           >
             {a.code}
@@ -224,8 +224,8 @@ export default function FlightBoard() {
             onClick={() => handleDirectionChange(dir)}
             className={`px-4 py-1.5 text-xs font-semibold capitalize transition-colors ${
               direction === dir
-                ? "bg-white/10 text-white"
-                : "text-[var(--muted)] hover:text-white"
+                ? "bg-[var(--surface)] text-[var(--foreground)]"
+                : "text-[var(--muted)] hover:text-[var(--foreground)]"
             }`}
           >
             {dir}
