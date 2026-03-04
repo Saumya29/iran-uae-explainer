@@ -3,14 +3,16 @@
 @tailwind utilities;
 
 :root {
-  --background: #0a0a0a;
-  --foreground: #ededed;
+  --background: #0c0c0c;
+  --foreground: #e2e2e2;
   --card: #141414;
-  --card-border: #262626;
+  --card-border: #1f1f1f;
   --accent: #ef4444;
-  --accent-soft: #7f1d1d;
-  --muted: #737373;
-  --muted-bg: #1a1a1a;
+  --accent-muted: rgba(239, 68, 68, 0.1);
+  --muted: #555555;
+  --muted-hover: #777777;
+  --muted-bg: #181818;
+  --surface: #1a1a1a;
 }
 
 * {
@@ -21,6 +23,7 @@ body {
   color: var(--foreground);
   background: var(--background);
   font-family: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
 
 /* Hide scrollbar for sidebar */
@@ -45,18 +48,18 @@ section[id] {
 
 /* Pulse animation for emergency button */
 @keyframes emergency-pulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
-  50% { box-shadow: 0 0 0 12px rgba(239, 68, 68, 0); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.35); }
+  50% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
 }
 
 .emergency-pulse {
-  animation: emergency-pulse 2s ease-in-out infinite;
+  animation: emergency-pulse 2.5s ease-in-out infinite;
 }
 
 /* Checkbox styling */
 .checklist-item input[type="checkbox"] {
   accent-color: #22c55e;
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
   cursor: pointer;
 }
