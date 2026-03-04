@@ -2,61 +2,94 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── Light mode (default) ─────────────────────────────── */
 :root {
-  --background: #0a0a0a;
-  --foreground: #ededed;
-  --card: #141414;
-  --card-border: #262626;
-  --accent: #ef4444;
-  --accent-soft: #7f1d1d;
-  --muted: #737373;
-  --muted-bg: #1a1a1a;
+  --background:     #ffffff;
+  --foreground:     #111111;
+  --card:           #f7f7f7;
+  --card-border:    #e4e4e4;
+  --accent:         #dc2626;
+  --muted:          #6b6b6b;
+  --muted-hover:    #111111;
+  --muted-bg:       #f0f0f0;
+  --surface:        #e8e8e8;
+  --nav-active-bg:  rgba(220, 38, 38, 0.07);
+  --progress-bg:    #e4e4e4;
 }
 
-* {
-  scroll-behavior: smooth;
+/* ── Dark mode ────────────────────────────────────────── */
+.dark {
+  --background:     #0c0c0c;
+  --foreground:     #f0f0f0;
+  --card:           #161616;
+  --card-border:    #252525;
+  --accent:         #ef4444;
+  --muted:          #888888;
+  --muted-hover:    #f0f0f0;
+  --muted-bg:       #1c1c1c;
+  --surface:        #222222;
+  --nav-active-bg:  rgba(239, 68, 68, 0.08);
+  --progress-bg:    #252525;
 }
+
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
 
 body {
   color: var(--foreground);
   background: var(--background);
   font-family: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  transition: background 0.2s ease, color 0.2s ease;
 }
 
-/* Hide scrollbar for sidebar */
-.hide-scrollbar::-webkit-scrollbar {
-  display: none;
-}
-.hide-scrollbar {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
+/* Scrollbar */
+.hide-scrollbar::-webkit-scrollbar { display: none; }
+.hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* Section scroll offset */
+section[id] { scroll-margin-top: 24px; }
+@media (max-width: 1023px) {
+  section[id] { scroll-margin-top: 112px; }
 }
 
-/* Smooth section highlighting */
-section[id] {
-  scroll-margin-top: 80px;
+/* Reading progress bar */
+#reading-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 2px;
+  background: var(--accent);
+  z-index: 200;
+  transition: width 0.1s linear;
+  pointer-events: none;
 }
 
-@media (min-width: 1024px) {
-  section[id] {
-    scroll-margin-top: 24px;
-  }
+/* Collapsible section animation */
+.section-content {
+  overflow: hidden;
+  transition: max-height 0.3s ease, opacity 0.25s ease;
+}
+.section-content.collapsed {
+  max-height: 0 !important;
+  opacity: 0;
+}
+.section-content.expanded {
+  opacity: 1;
 }
 
-/* Pulse animation for emergency button */
+/* Emergency pulse */
 @keyframes emergency-pulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
-  50% { box-shadow: 0 0 0 12px rgba(239, 68, 68, 0); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.35); }
+  50%       { box-shadow: 0 0 0 8px rgba(220, 38, 38, 0); }
 }
+.emergency-pulse { animation: emergency-pulse 2.2s ease-in-out infinite; }
 
-.emergency-pulse {
-  animation: emergency-pulse 2s ease-in-out infinite;
-}
-
-/* Checkbox styling */
+/* Checkbox */
 .checklist-item input[type="checkbox"] {
-  accent-color: #22c55e;
-  width: 18px;
-  height: 18px;
+  accent-color: #16a34a;
+  width: 15px;
+  height: 15px;
   cursor: pointer;
 }
