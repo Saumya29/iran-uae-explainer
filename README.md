@@ -1,36 +1,41 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Iran-UAE Conflict Explainer
 
-## Getting Started
+## Demo
 
-First, run the development server:
+<video src="demo.mp4" width="100%" autoplay loop muted playsinline></video>
+
+![Demo](demo.gif)
+
+## Why I built this
+
+I live in Dubai. When the US-Israeli strikes on Iran started and debris began falling over the UAE, the information was scattered — across Twitter threads, WhatsApp forwards, and news sites with conflicting updates. I wanted one place that had everything: what's happening, what to do, and who to call.
+
+So I built this over a weekend. A simple, fast crisis explainer for anyone living in the Gulf who just wants clear answers.
+
+## What it covers
+
+**Situation** — Live updates, attack timeline, casualty tracking, Iran's position, UAE's response, and the background context that led here.
+
+**Practical** — Flight status (DXB/AUH), shelter locations, supply checklists, evacuation routes, and what to expect with markets and oil prices.
+
+**Resources** — Emergency numbers (police, ambulance, civil defense), embassy contacts for multiple nationalities, and official information sources.
+
+## Stack
+
+- **Framework:** Next.js (App Router)
+- **Language:** TypeScript
+- **Styling:** Tailwind CSS
+- **Deployment:** Vercel
+
+## Running locally
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
+pnpm install
 pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## License
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+MIT
