@@ -272,6 +272,18 @@ export default function ContextPage() {
               { date: "Mar 3", event: "Second ballistic missile wave targets Abu Dhabi and Dubai. Impacts near Jebel Ali.", severity: "red" },
               { date: "Mar 3", event: "Houthis launch concurrent attacks on Saudi Arabia.", severity: "red" },
               { date: "Mar 4", event: "UN Security Council emergency session. No ceasefire agreement.", severity: "yellow" },
+              { date: "Mar 5-6", event: "UAE intercepts 6/7 missiles, 125/131 drones. Oil surges 35% for biggest weekly gain since 1983.", severity: "red" },
+              { date: "Mar 7", event: "Iran strikes Al Dhafra Air Base. French base Camp de la Paix hit by drones.", severity: "red" },
+              { date: "Mar 8", event: "Three shelter alerts in Abu Dhabi. Israel strikes Tehran oil depots. New supreme leader chosen.", severity: "red" },
+              { date: "Mar 9", event: "Mojtaba Khamenei named supreme leader. Oil hits $119.50. Qatar struck. 11,000+ flights canceled.", severity: "red" },
+              { date: "Mar 10", event: "US declares 'most intense day of strikes.' Iran fires lowest missiles since war. US destroys 16 minelayers.", severity: "red" },
+              { date: "Mar 11", event: "Three ships hit near Hormuz. IEA releases strategic oil reserves. Iran attacks targets across Israel and Gulf.", severity: "red" },
+              { date: "Mar 12", event: "Six US airmen killed in KC-135 crash in Iraq. Mojtaba Khamenei's first address — vows Hormuz closure.", severity: "red" },
+              { date: "Mar 13", event: "US bombs Kharg Island oil terminal. Trump: 'totally obliterated.' US lifts Russian oil restrictions.", severity: "red" },
+              { date: "Mar 14", event: "UAE intercepts 9 missiles, 33 drones. 1,000+ tankers stranded at Hormuz. Trump urges allies to send warships.", severity: "red" },
+              { date: "Mar 15", event: "Iran FM: 'We never asked for a ceasefire.' IDF hits 200+ targets in Iran. Israel ground ops in Lebanon.", severity: "red" },
+              { date: "Mar 16", event: "Drone hits fuel tank near Dubai airport. Missile kills resident in Abu Dhabi. NATO/Japan refuse Hormuz patrol.", severity: "red" },
+              { date: "Mar 17", event: "UAE briefly closes airspace — reopens. Israel kills Iran security chief Ali Larijani. 2,300+ total killed.", severity: "red" },
             ].map((item, i) => (
               <ContentCard key={i}>
                 <div className="flex gap-4">
