@@ -32,15 +32,23 @@ export function OilPriceChart() {
       </div>
 
       {/* Chart area */}
-      <div className="relative bg-[var(--muted-bg)] rounded-lg p-4 overflow-x-auto">
-        <div className="flex items-end gap-[6px] min-w-[500px] h-40">
+      <div className="relative bg-[var(--muted-bg)] rounded-lg p-4 pt-6 pb-8 overflow-x-auto">
+        {/* $100 reference line */}
+        <div
+          className="absolute left-4 right-4 border-t border-dashed border-red-500/40 pointer-events-none z-[1]"
+          style={{ bottom: `${((100 - minPrice) / range) * 160 + 32}px` }}
+        >
+          <span className="absolute -top-3 right-0 text-[9px] text-red-400/60 font-mono">$100</span>
+        </div>
+
+        <div className="flex items-end gap-[6px] min-w-[500px]" style={{ height: 160 }}>
           {data.map((d, i) => {
-            const height = ((d.price - minPrice) / range) * 100;
+            const barHeight = ((d.price - minPrice) / range) * 160;
             const isSpike = d.price >= 100;
             return (
-              <div key={i} className="flex-1 flex flex-col items-center gap-1 group relative">
+              <div key={i} className="flex-1 flex flex-col items-center group relative">
                 {/* Tooltip */}
-                <div className="absolute bottom-full mb-8 hidden group-hover:flex flex-col items-center z-10">
+                <div className="absolute bottom-full mb-2 hidden group-hover:flex flex-col items-center z-10">
                   <div className="bg-black/90 text-white text-[10px] px-2 py-1 rounded whitespace-nowrap">
                     {d.date}: {d.label}/bbl
                     {d.event && <span className="block text-yellow-300">{d.event}</span>}
@@ -48,28 +56,28 @@ export function OilPriceChart() {
                   <div className="w-1.5 h-1.5 bg-black/90 rotate-45 -mt-1" />
                 </div>
                 {/* Price label */}
-                <span className="text-[9px] text-[var(--muted)] font-mono">{d.label}</span>
+                <span className="text-[9px] text-[var(--muted)] font-mono mb-1">{d.label}</span>
                 {/* Bar */}
                 <div
-                  className={`w-full rounded-t-sm transition-all ${
+                  className={`w-full rounded-t-sm ${
                     isSpike ? "bg-red-500" : d.price >= 85 ? "bg-orange-400" : "bg-green-500"
                   }`}
-                  style={{ height: `${height}%` }}
+                  style={{ height: `${barHeight}px` }}
                 />
-                {/* Date label */}
-                <span className="text-[8px] text-[var(--muted)] font-mono mt-1 whitespace-nowrap">
-                  {d.date.replace("Feb ", "2/").replace("Mar ", "3/")}
-                </span>
               </div>
             );
           })}
         </div>
-
-        {/* $100 reference line */}
-        <div
-          className="absolute left-4 right-4 border-t border-dashed border-red-500/40"
-          style={{ bottom: `${((100 - minPrice) / range) * 100 * (160 / 100) / 160 * 100 + 16}%` }}
-        />
+        {/* Date labels row */}
+        <div className="flex gap-[6px] min-w-[500px] mt-1">
+          {data.map((d, i) => (
+            <div key={i} className="flex-1 text-center">
+              <span className="text-[8px] text-[var(--muted)] font-mono">
+                {d.date.replace("Feb ", "2/").replace("Mar ", "3/")}
+              </span>
+            </div>
+          ))}
+        </div>
       </div>
 
       <p className="text-[10px] text-[var(--muted)]">
@@ -414,19 +422,19 @@ export function ConflictIntensityChart() {
         </div>
       </div>
 
-      <div className="bg-[var(--muted-bg)] rounded-lg p-4 overflow-x-auto">
-        <div className="flex items-end gap-1 min-w-[550px] h-32">
+      <div className="bg-[var(--muted-bg)] rounded-lg p-4 pb-8 overflow-x-auto">
+        <div className="flex items-end gap-1 min-w-[550px]" style={{ height: 180 }}>
           {days.map((d, i) => (
-            <div key={i} className="flex-1 flex flex-col items-center gap-0.5 group relative">
+            <div key={i} className="flex-1 flex flex-col items-end group relative">
               {/* Tooltip */}
-              <div className="absolute bottom-full mb-14 hidden group-hover:flex flex-col items-center z-10">
+              <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 hidden group-hover:flex flex-col items-center z-10">
                 <div className="bg-black/90 text-white text-[10px] px-2 py-1 rounded whitespace-nowrap">
                   {d.date} ({d.day})
                   {d.label && <span className="block text-yellow-300">{d.label}</span>}
                 </div>
               </div>
               {/* Stacked bars */}
-              <div className="w-full flex flex-col items-center gap-[1px]">
+              <div className="w-full flex flex-col gap-[1px]">
                 <div
                   className="w-full bg-red-500 rounded-t-sm"
                   style={{ height: `${d.missiles * 1.2}px` }}
@@ -436,9 +444,14 @@ export function ConflictIntensityChart() {
                   style={{ height: `${d.drones * 1}px` }}
                 />
               </div>
-              <span className="text-[7px] text-[var(--muted)] font-mono mt-0.5">
-                {d.day}
-              </span>
+            </div>
+          ))}
+        </div>
+        {/* Day labels */}
+        <div className="flex gap-1 min-w-[550px] mt-1">
+          {days.map((d, i) => (
+            <div key={i} className="flex-1 text-center">
+              <span className="text-[7px] text-[var(--muted)] font-mono">{d.day}</span>
             </div>
           ))}
         </div>
