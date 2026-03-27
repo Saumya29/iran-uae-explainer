@@ -20,6 +20,12 @@ export function OilPriceChart() {
     { date: "Mar 19", price: 115, label: "$115", event: "Gulf energy attacks" },
     { date: "Mar 20", price: 107, label: "$107" },
     { date: "Mar 22", price: 112, label: "$112", event: "Hormuz ultimatum" },
+    { date: "Mar 23", price: 101, label: "$101", event: "Trump delays strikes" },
+    { date: "Mar 24", price: 102, label: "$102" },
+    { date: "Mar 25", price: 100, label: "$100", event: "Brief dip on deal hopes" },
+    { date: "Mar 26", price: 106, label: "$106", event: "Tangsiri killed" },
+    { date: "Mar 27", price: 108, label: "$108", event: "Nuclear sites struck" },
+    { date: "Mar 28", price: 108, label: "$108" },
   ];
 
   const maxPrice = 125;
@@ -384,8 +390,8 @@ export function EconomicIndicators() {
         ))}
       </div>
       <p className="text-[10px] text-[var(--muted)]">
-        Data approximate as of Mar 22, 2026. Oil peaked at $119.50 (Mar 9), spiked to $115 again (Mar 19) after South Pars strike.
-        Gold worst week since 1983 (-10%). Goldman Sachs: triple-digit oil may last years.
+        Data approximate as of Mar 28, 2026. Oil peaked at $119.50 (Mar 9), spiked to $115 (Mar 19) after South Pars, dipped below $100 briefly on deal hopes (Mar 25), rose to ~$108 after nuclear sites struck.
+        Japan releasing 30 days of reserves. Iraq exports down 70%. Goldman Sachs: triple-digit oil may last years.
       </p>
     </div>
   );
@@ -412,7 +418,13 @@ export function ConflictIntensityChart() {
     { day: "D20", date: "Mar 19", missiles: 40, drones: 55, label: "54 waves" },
     { day: "D21", date: "Mar 20", missiles: 25, drones: 35, label: "Kuwait hit" },
     { day: "D22", date: "Mar 21", missiles: 30, drones: 40, label: "Dimona hit" },
-    { day: "D23", date: "Mar 22", missiles: 25, drones: 35, label: "Today" },
+    { day: "D23", date: "Mar 22", missiles: 25, drones: 35, label: "Ultimatum" },
+    { day: "D24", date: "Mar 23", missiles: 20, drones: 30, label: "Strikes paused" },
+    { day: "D25", date: "Mar 24", missiles: 22, drones: 32, label: "Isfahan hit" },
+    { day: "D26", date: "Mar 25", missiles: 18, drones: 35, label: "Saudi hit" },
+    { day: "D27", date: "Mar 26", missiles: 20, drones: 28, label: "Tangsiri killed" },
+    { day: "D28", date: "Mar 27", missiles: 18, drones: 25, label: "Nuclear sites" },
+    { day: "D29", date: "Mar 28", missiles: 15, drones: 22, label: "Today" },
   ];
 
   return (
@@ -495,7 +507,10 @@ export function UAEInterceptsChart() {
     { date: "Mar 17", day: "D18", missiles: 5, drones: 20, label: "Airspace closed" },
     { date: "Mar 18", day: "D19", missiles: 13, drones: 27, label: "Retaliation surge" },
     { date: "Mar 20", day: "D21", missiles: 4, drones: 26, label: "" },
-    { date: "Mar 22", day: "D23", missiles: 4, drones: 25, label: "Today" },
+    { date: "Mar 22", day: "D23", missiles: 4, drones: 25, label: "" },
+    { date: "Mar 25", day: "D26", missiles: 3, drones: 18, label: "DXB debris" },
+    { date: "Mar 26", day: "D27", missiles: 5, drones: 20, label: "2 killed Abu Dhabi" },
+    { date: "Mar 28", day: "D29", missiles: 3, drones: 15, label: "Today" },
   ];
 
   const maxTotal = 250;
@@ -554,7 +569,7 @@ export function UAEInterceptsChart() {
 
       <div className="grid grid-cols-3 gap-2">
         <div className="bg-red-500/10 rounded-lg p-2 text-center">
-          <p className="text-lg font-bold text-red-400 font-mono">345</p>
+          <p className="text-lg font-bold text-red-400 font-mono">357</p>
           <p className="text-[10px] text-[var(--muted)]">Ballistic missiles</p>
         </div>
         <div className="bg-orange-500/10 rounded-lg p-2 text-center">
@@ -562,15 +577,15 @@ export function UAEInterceptsChart() {
           <p className="text-[10px] text-[var(--muted)]">Cruise missiles</p>
         </div>
         <div className="bg-yellow-500/10 rounded-lg p-2 text-center">
-          <p className="text-lg font-bold text-yellow-400 font-mono">1,773</p>
+          <p className="text-lg font-bold text-yellow-400 font-mono">1,815</p>
           <p className="text-[10px] text-[var(--muted)]">Drones (UAVs)</p>
         </div>
       </div>
 
       <p className="text-[10px] text-[var(--muted)]">
-        Source: UAE Ministry of Defence. Totals as of Mar 22. 8 killed, 158 injured.
-        Early-war drone swarms of 100-200/day dropped to 20-30/day as Iran&apos;s capacity degraded,
-        but surged again after South Pars strike (Day 19).
+        Source: UAE Ministry of Defence. Totals as of Mar 28. 11 killed, 169 injured (29 nationalities).
+        ~48% of all Iranian projectiles target UAE. Drone swarms dropped to 15-20/day as capacity degrades.
+        Intercept debris now a significant civilian hazard — 2 killed in Abu Dhabi on Mar 26.
       </p>
     </div>
   );
@@ -592,7 +607,10 @@ export function HormuzShippingChart() {
     { date: "Mar 15", vessels: 8, label: "Permission transits" },
     { date: "Mar 17", vessels: 10, label: "" },
     { date: "Mar 19", vessels: 12, label: "Trickle resumes" },
-    { date: "Mar 22", vessels: 15, label: "Still paralyzed" },
+    { date: "Mar 22", vessels: 15, label: "Ultimatum issued" },
+    { date: "Mar 25", vessels: 18, label: "5 nations allowed" },
+    { date: "Mar 27", vessels: 14, label: "Navy chief killed" },
+    { date: "Mar 28", vessels: 12, label: "Still paralyzed" },
   ];
 
   const maxVessels = 150;
@@ -797,6 +815,8 @@ export function RegionalCasualtyChart() {
     { date: "Mar 17", day: "D18", iran: 3100, lebanon: 850, israel: 16, uae: 8, us: 13, other: 60 },
     { date: "Mar 20", day: "D21", iran: 4200, lebanon: 1000, israel: 18, uae: 8, us: 13, other: 70 },
     { date: "Mar 22", day: "D23", iran: 4800, lebanon: 1050, israel: 18, uae: 8, us: 13, other: 75 },
+    { date: "Mar 25", day: "D26", iran: 5100, lebanon: 1072, israel: 18, uae: 11, us: 13, other: 85 },
+    { date: "Mar 28", day: "D29", iran: 5500, lebanon: 1116, israel: 22, uae: 11, us: 13, other: 95 },
   ];
 
   const maxTotal = 6500;
@@ -816,7 +836,7 @@ export function RegionalCasualtyChart() {
         <h3 className="text-sm font-bold uppercase tracking-wider">
           Regional Death Toll Over Time
         </h3>
-        <span className="text-xs text-red-400 font-mono">4,500+ total</span>
+        <span className="text-xs text-red-400 font-mono">5,500+ total</span>
       </div>
 
       <div className="flex flex-wrap gap-2 text-[10px]">
@@ -872,9 +892,9 @@ export function RegionalCasualtyChart() {
       </div>
 
       <p className="text-[10px] text-[var(--muted)]">
-        Iran accounts for ~80% of deaths. HRANA documented 3,114 by Mar 17 (official figures lower).
-        Hengaw reports 5,300 killed in Iran in first 18 days. Lebanon: 1,000+ killed, 1M displaced.
-        Figures vary widely by source. Iraq: 61 killed. Israel: 18 killed, 4,292 injured.
+        Iran accounts for ~80% of deaths. WaPo: ~1,500 civilians killed as of Mar 27. Hengaw reports 5,300+
+        killed in Iran in first 18 days. Lebanon: 1,116 killed, 3,229 injured (121 children, 42 health workers).
+        ~350 children killed across region. Kuwait: 8 killed. Saudi: 2 killed. Bahrain: 3 killed.
       </p>
     </div>
   );
@@ -887,48 +907,49 @@ export function GlobalMarketsTimeline() {
     { label: "Week 1", date: "Mar 7" },
     { label: "Week 2", date: "Mar 14" },
     { label: "Week 3", date: "Mar 22" },
+    { label: "Week 4", date: "Mar 28" },
   ];
 
   const markets = [
     {
       name: "S&P 500",
       flag: "🇺🇸",
-      values: [5950, 5740, 5690, 5590],
+      values: [5950, 5740, 5690, 5590, 5520],
       color: "bg-blue-400",
       lineColor: "text-blue-400",
     },
     {
       name: "DFM (Dubai)",
       flag: "🇦🇪",
-      values: [5200, 4700, 4300, 4100],
+      values: [5200, 4700, 4300, 4100, 3950],
       color: "bg-red-500",
       lineColor: "text-red-400",
     },
     {
       name: "Nifty 50",
       flag: "🇮🇳",
-      values: [23100, 22400, 21600, 21250],
+      values: [23100, 22400, 21600, 21250, 20800],
       color: "bg-orange-400",
       lineColor: "text-orange-400",
     },
     {
       name: "Nikkei 225",
       flag: "🇯🇵",
-      values: [38800, 37500, 36200, 34500],
+      values: [38800, 37500, 36200, 34500, 33800],
       color: "bg-purple-400",
       lineColor: "text-purple-400",
     },
     {
       name: "STOXX 600",
       flag: "🇪🇺",
-      values: [560, 540, 530, 526],
+      values: [560, 540, 530, 526, 518],
       color: "bg-green-400",
       lineColor: "text-green-400",
     },
     {
       name: "KOSPI",
       flag: "🇰🇷",
-      values: [2650, 2550, 2480, 2490],
+      values: [2650, 2550, 2480, 2490, 2430],
       color: "bg-cyan-400",
       lineColor: "text-cyan-400",
     },
@@ -940,7 +961,7 @@ export function GlobalMarketsTimeline() {
         <h3 className="text-sm font-bold uppercase tracking-wider">
           Global Markets Since War Began
         </h3>
-        <span className="text-xs text-red-400 font-mono">Feb 28 → Mar 22</span>
+        <span className="text-xs text-red-400 font-mono">Feb 28 → Mar 28</span>
       </div>
 
       <div className="space-y-2">

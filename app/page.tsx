@@ -133,24 +133,25 @@ function OverviewSection() {
       <InfoCard>
         <div className="space-y-4">
           <div className="flex flex-wrap gap-2">
-            <StatusBadge status="red" label="Day 23 — Active War" />
-            <StatusBadge status="red" label="Oil ~$112/barrel" />
+            <StatusBadge status="red" label="Day 29 — Active War" />
+            <StatusBadge status="red" label="Oil ~$108/barrel" />
             <StatusBadge status="red" label="Hormuz Still Closed" />
-            <StatusBadge status="red" label="Trump: 48hr Ultimatum" />
-            <StatusBadge status="red" label="South Pars Gas Field Hit" />
-            <StatusBadge status="red" label="4,500+ Killed Regionally" />
+            <StatusBadge status="red" label="Nuclear Sites Struck" />
+            <StatusBadge status="red" label="IRGC Navy Chief Killed" />
+            <StatusBadge status="red" label="5,500+ Killed Regionally" />
           </div>
           <p className="text-[var(--muted)] leading-relaxed">
-            Day 23 of the US-Israel war on Iran. Trump issued a 48-hour ultimatum: reopen
-            the Strait of Hormuz or the US will &ldquo;hit and obliterate&rdquo; Iran&apos;s
-            power plants. Iran says Hormuz will be &ldquo;completely closed&rdquo; if the US
-            follows through. Israel struck South Pars — the world&apos;s largest gas field —
-            on Day 19, a major escalation. Oil spiked to $115 before settling ~$112. Iran
-            retaliated by hitting Qatar&apos;s Ras Laffan and Kuwait&apos;s Mina Al-Ahmadi
-            refinery. Iranian missiles hit Dimona and Arad in Israel, wounding ~100. HRANA:
-            3,100+ killed in Iran. 1,000+ killed in Lebanon. UAE has intercepted 338 missiles
-            and 1,740 drones total. UAE arrested 100+ people for filming attacks. Gold crashed
-            10% weekly. 4,500+ killed across the region.
+            Day 29 of the US-Israel war on Iran. Trump postponed energy strikes, extended deadline
+            to April 6 — says talks going &ldquo;very well&rdquo; via Pakistan mediator. Iran
+            rejected US 15-point peace plan as &ldquo;maximalist,&rdquo; issued 5-point counterproposal
+            demanding war reparations and Hormuz sovereignty. Israel killed IRGC Navy chief Admiral
+            Tangsiri at Bandar Abbas (Day 27). Israel struck Iran&apos;s Yazd yellowcake uranium plant
+            and Arak heavy water reactor (Day 28). US destroyed ~two-thirds of Iran&apos;s missile/drone
+            facilities. Saudi Arabia intercepted 32+ drones in Eastern Province. Iran says
+            &ldquo;non-hostile&rdquo; ships (China, Russia, India, Iraq, Pakistan) can transit Hormuz.
+            1,900+ killed in Iran (~1,500 civilians, 217+ children). 1,116 killed in Lebanon.
+            UAE: 11 killed, 169 injured — 357 missiles, 1,815 drones, 15 cruise missiles intercepted.
+            Oil ~$108. 6 Gulf states issued joint condemnation of Iran.
           </p>
           <div className="grid grid-cols-2 gap-3 mt-4">
             <div className="bg-[var(--muted-bg)] rounded-lg p-3">
@@ -159,17 +160,17 @@ function OverviewSection() {
             </div>
             <div className="bg-[var(--muted-bg)] rounded-lg p-3">
               <p className="text-xs text-[var(--muted)]">Status</p>
-              <p className="text-sm font-semibold text-red-400">Day 23 — Trump issues Hormuz ultimatum</p>
+              <p className="text-sm font-semibold text-red-400">Day 29 — Nuclear sites struck, talks stalled</p>
             </div>
             <div className="bg-[var(--muted-bg)] rounded-lg p-3">
               <p className="text-xs text-[var(--muted)]"><TopicLink slug="ceasefire">Ceasefire</TopicLink></p>
               <p className="text-sm font-semibold text-red-400">
-                None — Trump floated &ldquo;winding down&rdquo; then escalated
+                Stalled — Iran rejected US 15-point plan, April 6 deadline
               </p>
             </div>
             <div className="bg-[var(--muted-bg)] rounded-lg p-3">
               <p className="text-xs text-[var(--muted)]">US Involvement</p>
-              <p className="text-sm font-semibold">Active — 13+ killed, 200+ wounded, more Marines deployed</p>
+              <p className="text-sm font-semibold">Active — 13 killed, 303+ wounded, 50,000+ troops deployed</p>
             </div>
           </div>
         </div>
@@ -186,6 +187,60 @@ function AttacksSection() {
       </h2>
       <div className="space-y-3">
         {[
+          {
+            date: "Mar 28",
+            event: (
+              <>
+                Day 29: Israel escalates strikes after hitting nuclear facilities. Iran&apos;s Arak heavy water reactor and Yazd yellowcake plant confirmed targeted — no radiation leaks reported. Iran rejects US offer as &ldquo;one-sided and unfair.&rdquo; Pakistan mediating possible in-person talks this weekend. UN Security Council holds closed-door consultations at Russia&apos;s request. VP Vance reportedly chides Netanyahu for &ldquo;overselling regime change.&rdquo; Oil ~$108. ~350 children killed across region.
+              </>
+            ),
+            severity: "red" as const,
+          },
+          {
+            date: "Mar 27",
+            event: (
+              <>
+                Day 28: Israel strikes Iran&apos;s nuclear facilities — Yazd yellowcake uranium plant (&ldquo;only one of its kind&rdquo;) and Khondab/Arak heavy water reactor hit. US-Israeli strikes damage two major Iranian steel plants. US confirms ~two-thirds of Iran&apos;s missile/drone production destroyed. US airstrike on Habbaniyah base kills 5-7 Iraqi soldiers, wounds 23. 120+ Iranian historical sites damaged. Oil $107.81. 1,900+ killed in Iran (1,500 civilians, 217+ children).
+              </>
+            ),
+            severity: "red" as const,
+          },
+          {
+            date: "Mar 26",
+            event: (
+              <>
+                Day 27: Israel kills IRGC Navy chief Admiral Tangsiri in airstrike at Bandar Abbas near <TopicLink slug="strait-of-hormuz">Hormuz</TopicLink>. Trump extends energy strike pause 10 days to April 6 — says talks &ldquo;going very well.&rdquo; Iran rejects direct talks. 6 Gulf states (UAE, Saudi, Kuwait, Bahrain, Qatar, Jordan) issue joint condemnation. Abu Dhabi: intercepted debris kills 2 (Indian, Pakistani nationals), injures 3. Kuwait&apos;s Shuwaikh port hit by dawn drone attack. Oil $105.85.
+              </>
+            ),
+            severity: "red" as const,
+          },
+          {
+            date: "Mar 25",
+            event: (
+              <>
+                Day 26: Saudi Arabia intercepts 32+ drones and 1 <TopicLink slug="ballistic-missiles">ballistic missile</TopicLink> in Eastern Province — major oil facilities targeted. Iran receives US 15-point peace proposal via Pakistan — rejects it as &ldquo;extremely maximalist.&rdquo; Iran&apos;s 5-point counterproposal demands war reparations and Hormuz sovereignty. Iran says &ldquo;non-hostile&rdquo; ships from China, Russia, India, Iraq, Pakistan can transit Hormuz. DXB Terminal 3 debris from intercept injures 2. UAE: 11 killed, 169 injured total. Oil drops below $100 briefly.
+              </>
+            ),
+            severity: "red" as const,
+          },
+          {
+            date: "Mar 24",
+            event: (
+              <>
+                Day 25: IDF conducts &ldquo;extensive&rdquo; strikes on Isfahan Province — 600+ strikes on Iranian <TopicLink slug="ballistic-missiles">missile</TopicLink> sites since war began. Iran fires 9 attack waves with cluster munitions at Israel. 1,000 troops from 82nd Airborne deploying to Middle East. Japan releases 30 days of oil reserves. Kuwait airport drone strike causes fire. Oil $102.47 (+43% from one month ago).
+              </>
+            ),
+            severity: "red" as const,
+          },
+          {
+            date: "Mar 23",
+            event: (
+              <>
+                Day 24: Trump postpones planned strikes on Iran&apos;s power plants for 5 days, citing &ldquo;productive conversations.&rdquo; Iran denies any direct talks — says Trump trying to lower oil prices. US airstrike on Habbaniyah base (Iraq) kills 15 fighters including PMF commander. Iran threatens to mine &ldquo;entire Persian Gulf.&rdquo; Missile warning issued across UAE. Oil drops to ~$101 on deal hopes. 2,000 vessels and 20,000 seafarers stranded at <TopicLink slug="strait-of-hormuz">Hormuz</TopicLink>.
+              </>
+            ),
+            severity: "red" as const,
+          },
           {
             date: "Mar 22",
             event: (
@@ -363,40 +418,41 @@ function IranSection() {
       <InfoCard>
         <div className="space-y-3">
           <p className="text-sm leading-relaxed text-[var(--muted)]">
-            Iran warns it will target all US and Israeli energy infrastructure if Trump
-            follows through on his 48-hour Hormuz ultimatum. Mojtaba Khamenei says Iran
-            dealt &ldquo;dizzying blow&rdquo; to enemies. Iran intensified Gulf energy
-            attacks after Israel struck South Pars — hitting Qatar&apos;s Ras Laffan and
-            Kuwait&apos;s largest refinery. Iranian missiles broke through Israeli defenses
-            at Dimona and Arad, wounding ~100. HRANA: 3,100+ killed in Iran (1,354 civilians,
-            1,138 military). IRGC spokesman Naini and security chief Larijani both killed
-            by Israeli strikes. Attack waves surged to 54/day despite degraded capacity.
+            Iran rejected the US 15-point peace plan as &ldquo;extremely maximalist and
+            unreasonable&rdquo; — issued 5-point counterproposal demanding war reparations,
+            Hormuz sovereignty, and a halt to all aggression. FM Araghchi says Iran has
+            &ldquo;no intention of negotiating for now.&rdquo; IRGC Navy chief Admiral Tangsiri
+            killed by Israel at Bandar Abbas (Day 27). Nuclear facilities at Yazd and Arak
+            struck (Day 28). 1,900+ killed in Iran (~1,500 civilians, 217+ children). US
+            destroyed ~two-thirds of Iran&apos;s missile/drone production. Iran says
+            &ldquo;non-hostile&rdquo; ships from 5 friendly nations can transit Hormuz. 120+
+            historical sites damaged.
           </p>
           <ul className="space-y-2 text-sm">
             <li className="flex gap-2">
               <span className="text-red-400">•</span>
-              <span>Threatens to target all US/Israeli energy if power plants hit</span>
+              <span>Rejected US 15-point plan — demands reparations, Hormuz sovereignty</span>
             </li>
             <li className="flex gap-2">
               <span className="text-red-400">•</span>
-              <span>Mojtaba Khamenei: Iran dealt &ldquo;dizzying blow&rdquo; to enemies</span>
+              <span>IRGC Navy chief Tangsiri killed at Bandar Abbas — led Hormuz closure</span>
             </li>
             <li className="flex gap-2">
               <span className="text-red-400">•</span>
-              <span>HRANA: 3,100+ killed (incl. 210+ children, 234 women). 970+ hospitalized.</span>
+              <span>Nuclear facilities struck: Yazd yellowcake plant and Arak heavy water reactor</span>
             </li>
             <li className="flex gap-2">
               <span className="text-red-400">•</span>
-              <span>Attack waves surged to 54/day — hitting Gulf energy infrastructure</span>
+              <span>1,900+ killed (~1,500 civilians, 217+ children). 120+ historical sites damaged.</span>
             </li>
             <li className="flex gap-2">
               <span className="text-red-400">•</span>
-              <span>Missiles broke through Israeli defenses — direct hits on Dimona, Arad</span>
+              <span>~Two-thirds of missile/drone production destroyed by US-Israeli strikes</span>
             </li>
             <li className="flex gap-2">
               <span className="text-yellow-400">•</span>
               <span>
-                South Pars gas field struck by Israel — 70% of Iran&apos;s gas production disabled
+                Allows 5 &ldquo;non-hostile&rdquo; nations to transit Hormuz: China, Russia, India, Iraq, Pakistan
               </span>
             </li>
           </ul>
@@ -415,22 +471,24 @@ function UAESection() {
       <InfoCard>
         <div className="space-y-3">
           <p className="text-sm leading-relaxed text-[var(--muted)]">
-            UAE air defenses have intercepted 338 ballistic missiles, 15 cruise missiles,
-            and 1,740 drones since the war began. 8 killed (2 military, 6 civilians of
-            Pakistani, Nepalese, Bangladeshi, and Palestinian nationalities), 158 injured.
-            UAE arrested 100+ people for filming and posting about attacks — penalties
-            up to 2 years in prison and AED 200,000 fines. UAE dismantled a Hezbollah/Iran-linked
-            network operating under a fictitious commercial front. Iran warned it will deliver
-            &ldquo;crushing blows&rdquo; to Ras al-Khaimah if attacks launched from UAE territory.
+            UAE air defenses have intercepted 357 ballistic missiles, 15 cruise missiles,
+            and 1,815 drones since the war began — ~48% of all Iranian projectiles targeted
+            the UAE. 11 killed (3 military incl. 2 Emirati, 1 Moroccan; 8 civilians from Indian,
+            Pakistani, Nepalese, Bangladeshi, and Palestinian nationalities), 169 injured
+            (from 29 nationalities). DXB Terminal 3 damaged again by intercept debris (Mar 25).
+            Abu Dhabi intercept debris killed 2 (Indian, Pakistani nationals) on Mar 26.
+            UAE arrested 100+ people for filming attacks. Kuwait arrested 6 people linked
+            to Hezbollah planning assassinations. 6 Gulf states issued joint condemnation
+            of Iran&apos;s attacks.
           </p>
           <ul className="space-y-2 text-sm">
             <li className="flex gap-2">
               <span className="text-green-400">•</span>
-              <span><TopicLink slug="thaad">THAAD</TopicLink> and <TopicLink slug="patriot">Patriot</TopicLink> intercepting daily — 338 missiles, 1,740 drones total</span>
+              <span><TopicLink slug="thaad">THAAD</TopicLink> and <TopicLink slug="patriot">Patriot</TopicLink> intercepting daily — 357 missiles, 1,815 drones total</span>
             </li>
             <li className="flex gap-2">
               <span className="text-red-400">•</span>
-              <span>8 killed, 158 injured — debris and falling projectiles hitting populated areas</span>
+              <span>11 killed, 169 injured — ~48% of all Iranian projectiles target UAE</span>
             </li>
             <li className="flex gap-2">
               <span className="text-red-400">•</span>
@@ -438,11 +496,11 @@ function UAESection() {
             </li>
             <li className="flex gap-2">
               <span className="text-blue-400">•</span>
-              <span>Dismantled Hezbollah/Iran-linked network — members arrested</span>
+              <span>6 Gulf states jointly condemn Iran&apos;s attacks and Hormuz closure</span>
             </li>
             <li className="flex gap-2">
               <span className="text-yellow-400">•</span>
-              <span>Iran threatens &ldquo;crushing blows&rdquo; on Ras al-Khaimah</span>
+              <span>DXB Terminal 3 hit again by debris (Mar 25) — 2 ground crew injured</span>
             </li>
           </ul>
         </div>
@@ -464,35 +522,35 @@ function CasualtiesSection() {
       <InfoCard>
         <div className="grid grid-cols-2 gap-4">
           <div className="bg-red-500/10 rounded-lg p-4 text-center">
-            <p className="text-2xl font-bold text-red-400">8</p>
+            <p className="text-2xl font-bold text-red-400">11</p>
             <p className="text-xs text-[var(--muted)] mt-1">
               Killed in UAE
             </p>
-            <p className="text-[10px] text-[var(--muted)]">2 military, 6 civilians (debris, missile, helicopter)</p>
+            <p className="text-[10px] text-[var(--muted)]">3 military (2 Emirati, 1 Moroccan), 8 civilians</p>
           </div>
           <div className="bg-yellow-500/10 rounded-lg p-4 text-center">
-            <p className="text-2xl font-bold text-yellow-400">158+</p>
+            <p className="text-2xl font-bold text-yellow-400">169+</p>
             <p className="text-xs text-[var(--muted)] mt-1">Injured in UAE</p>
-            <p className="text-[10px] text-[var(--muted)]">Debris, blast effects, missile strikes</p>
+            <p className="text-[10px] text-[var(--muted)]">From 29 nationalities. Debris, blast effects.</p>
           </div>
           <div className="bg-red-500/10 rounded-lg p-4 text-center">
-            <p className="text-2xl font-bold text-red-400">3,100+</p>
+            <p className="text-2xl font-bold text-red-400">1,900+</p>
             <p className="text-xs text-[var(--muted)] mt-1">
               Killed in Iran
             </p>
-            <p className="text-[10px] text-[var(--muted)]">1,354 civilians, 1,138 military (HRANA). 210+ children.</p>
+            <p className="text-[10px] text-[var(--muted)]">~1,500 civilians, 217+ children (WaPo/HRANA)</p>
           </div>
           <div className="bg-red-500/10 rounded-lg p-4 text-center">
-            <p className="text-2xl font-bold text-red-400">13+</p>
+            <p className="text-2xl font-bold text-red-400">13</p>
             <p className="text-xs text-[var(--muted)] mt-1">
               US Service Members Killed
             </p>
-            <p className="text-[10px] text-[var(--muted)]">Incl. 6 in KC-135 crash. 200+ wounded.</p>
+            <p className="text-[10px] text-[var(--muted)]">303+ wounded (75% TBI). 50,000+ deployed.</p>
           </div>
         </div>
         <div className="grid grid-cols-3 gap-3 mt-3">
           <div className="bg-red-500/10 rounded-lg p-3 text-center">
-            <p className="text-lg font-bold text-red-400">1,000+</p>
+            <p className="text-lg font-bold text-red-400">1,116</p>
             <p className="text-[10px] text-[var(--muted)]">Killed in Lebanon</p>
           </div>
           <div className="bg-red-500/10 rounded-lg p-3 text-center">
@@ -500,14 +558,15 @@ function CasualtiesSection() {
             <p className="text-[10px] text-[var(--muted)]">Killed in Israel</p>
           </div>
           <div className="bg-red-500/10 rounded-lg p-3 text-center">
-            <p className="text-lg font-bold text-red-400">4,500+</p>
+            <p className="text-lg font-bold text-red-400">5,500+</p>
             <p className="text-[10px] text-[var(--muted)]">Total killed regionally</p>
           </div>
         </div>
         <p className="text-xs text-[var(--muted)] mt-4">
-          ⚠️ Figures from multiple sources as of Mar 22. Iran: HRANA (3,114 documented by Mar 17).
-          UAE: Defence Ministry. Lebanon: Ministry of Public Health. Israel: 4,292 injured. US: CENTCOM.
-          Iraq: 61 killed. 50,000+ US troops supporting Operation Epic Fury.
+          ⚠️ Figures from multiple sources as of Mar 28. Iran: ~1,500 civilians killed (WaPo), Hengaw reports
+          5,300+ in first 18 days. Lebanon: 1,116 killed, 3,229 injured (121 children, 42 health workers).
+          UAE: 11 killed, 169 injured (Defence Ministry). US: 13 killed, 303+ wounded. Kuwait: 8 killed.
+          Saudi: 2 killed. Bahrain: 3 killed. ~350 children killed across region. 50,000+ US troops deployed.
         </p>
       </InfoCard>
 
@@ -544,12 +603,14 @@ function HistorySection() {
           </p>
           <p>
             The <TopicLink slug="strait-of-hormuz">Strait of Hormuz</TopicLink> remains
-            closed — Trump issued a 48-hour ultimatum to reopen it or face strikes on
-            Iran&apos;s power plants. Iran says it will &ldquo;completely close&rdquo; Hormuz
-            if attacked. Israel struck South Pars gas field on Day 19, disabling 70% of Iran&apos;s
-            gas production. <TopicLink slug="oil-markets">Oil</TopicLink> peaked at $119.50 (Mar 9),
-            spiked again to $115 after South Pars, now ~$112. Middle East oil exports down 61%.
-            Goldman Sachs says triple-digit oil may last years.
+            closed — 2,000+ vessels and 20,000 seafarers stranded. Trump extended his energy
+            strike deadline to April 6. Iran says &ldquo;non-hostile&rdquo; ships from China,
+            Russia, India, Iraq, Pakistan can transit. Israel killed IRGC Navy chief Tangsiri
+            (who led the Hormuz closure) and struck nuclear facilities at Yazd and Arak. US
+            15-point peace plan rejected by Iran; 5-point counterproposal demands reparations.
+            <TopicLink slug="oil-markets">Oil</TopicLink> peaked at $119.50 (Mar 9), now ~$108.
+            Japan releasing 30 days of reserves. Iraq exports down 70%. Philippines declared
+            energy emergency. Goldman Sachs says triple-digit oil may last years.
           </p>
         </div>
         <div className="mt-4">
@@ -576,10 +637,10 @@ function FlightsSection() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4">
               <p className="text-xs text-red-400 font-semibold uppercase">
-                Latest (Mar 22)
+                Latest (Mar 28)
               </p>
               <p className="text-sm font-bold mt-1">Daily intercepts continue</p>
-              <p className="text-xs text-[var(--muted)]">338 missiles, 1,740 drones intercepted total</p>
+              <p className="text-xs text-[var(--muted)]">357 missiles, 1,815 drones intercepted total</p>
             </div>
             <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4">
               <p className="text-xs text-red-400 font-semibold uppercase">
@@ -699,14 +760,14 @@ function MarketsSection() {
           <div className="grid grid-cols-2 gap-3">
             <div className="bg-red-500/10 rounded-lg p-3">
               <p className="text-xs text-[var(--muted)]"><TopicLink slug="oil-markets">Oil</TopicLink> (Brent)</p>
-              <p className="text-sm font-bold text-red-400">~$112 (peaked $119.50)</p>
-              <p className="text-xs text-[var(--muted)]">+60% since war began. Spiked after South Pars strike.</p>
+              <p className="text-sm font-bold text-red-400">~$108 (peaked $119.50)</p>
+              <p className="text-xs text-[var(--muted)]">+51% since war began. Briefly below $100 on deal hopes.</p>
             </div>
             <div className="bg-red-500/10 rounded-lg p-3">
               <p className="text-xs text-[var(--muted)]"><TopicLink slug="strait-of-hormuz">Strait of Hormuz</TopicLink></p>
               <p className="text-sm font-bold text-red-400">Paralyzed</p>
               <p className="text-xs text-[var(--muted)]">
-                1,000+ tankers stranded • Iran mined strait • ME exports -61%
+                2,000+ vessels stranded • 20,000 seafarers • 5 nations allowed transit
               </p>
             </div>
             <div className="bg-red-500/10 rounded-lg p-3">
